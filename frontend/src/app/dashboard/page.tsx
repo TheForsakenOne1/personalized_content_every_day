@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, TrendingUp, Clock } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { FeaturedContent } from "@/components/dashboard/featured-content";
 import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
+import { useOnboardingStore } from "@/store/onboardingStore";
 import { toast } from "sonner";
 
 // Mock data - In production, this would come from your API
@@ -140,8 +142,17 @@ const mockContent: ContentItem[] = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { hasCompletedOnboarding } = useOnboardingStore();
   const [content, setContent] = useState<ContentItem[]>(mockContent);
   const [filter, setFilter] = useState<"all" | "unread" | "saved">("all");
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (!hasCompletedOnboarding) {
+      router.push("/onboarding");
+    }
+  }, [hasCompletedOnboarding, router]);
 
   const handleSave = (id: string) => {
     setContent((prev) =>
