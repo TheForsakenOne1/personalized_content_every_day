@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { TopNavigation } from "./top-navigation";
 import { Sidebar } from "./sidebar";
+import { BottomNavigation } from "@/components/mobile/bottom-navigation";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -83,11 +84,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             isSidebarOpen ? "lg:ml-0" : ""
           }`}
         >
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 }
