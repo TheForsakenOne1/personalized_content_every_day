@@ -82,4 +82,72 @@ export const authApi = {
 
     return data.data!.user;
   },
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const data: ApiResponse<{ message: string }> = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error?.message || 'Failed to request password reset');
+    }
+
+    return data.data!;
+  },
+
+  async resetPassword(token: string, password: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+
+    const data: ApiResponse<{ message: string }> = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error?.message || 'Failed to reset password');
+    }
+
+    return data.data!;
+  },
+
+  async sendVerificationEmail(): Promise<{ message: string }> {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`${API_URL}/api/auth/send-verification`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data: ApiResponse<{ message: string }> = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error?.message || 'Failed to send verification email');
+    }
+
+    return data.data!;
+  },
+
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ token }),
+    });
+
+    const data: ApiResponse<AuthResponse> = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error?.message || 'Email verification failed');
+    }
+
+    return data.data!;
+  },
 };

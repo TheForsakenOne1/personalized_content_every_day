@@ -138,4 +138,89 @@ export class AuthController {
       next(error);
     }
   }
+
+  async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        throw new AppError('Email is required', 400);
+      }
+
+      const result = await authService.requestPasswordReset(email);
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        throw new AppError('Token and password are required', 400);
+      }
+
+      const result = await authService.resetPassword(token, password);
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendVerificationEmail(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new AppError('Not authenticated', 401);
+      }
+
+      const result = await authService.sendVerificationEmail(req.user.id);
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        throw new AppError('Token is required', 400);
+      }
+
+      const result = await authService.verifyEmail(token);
+
+      // Set refresh token as httpOnly cookie
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      res.json({
+        success: true,
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

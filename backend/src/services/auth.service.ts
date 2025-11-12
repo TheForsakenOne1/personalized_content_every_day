@@ -202,4 +202,196 @@ export class AuthService {
       });
     }
   }
+
+  async requestPasswordReset(email: string) {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || !user.isActive) {
+      // Don't reveal if user exists for security
+      return { message: 'If the email exists, a reset link will be sent' };
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+    // Store reset token
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: resetTokenHash,
+        expiresAt,
+      },
+    });
+
+    // TODO: Send password reset email with resetToken
+    // In production, send email. For development, log the token
+    console.log(`Password reset token for ${email}: ${resetToken}`);
+
+    return { message: 'If the email exists, a reset link will be sent' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.valid) {
+      throw new AppError(passwordValidation.errors.join(', '), 400);
+    }
+
+    // Hash the token to find it in the database
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find valid reset token
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        tokenHash,
+        usedAt: null,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!resetToken) {
+      throw new AppError('Invalid or expired reset token', 400);
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(newPassword);
+
+    // Update password and mark token as used
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+      // Revoke all existing refresh tokens for security
+      prisma.refreshToken.updateMany({
+        where: {
+          userId: resetToken.userId,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      }),
+    ]);
+
+    return { message: 'Password reset successful' };
+  }
+
+  async sendVerificationEmail(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (user.emailVerified) {
+      throw new AppError('Email already verified', 400);
+    }
+
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 86400000); // 24 hours
+
+    // Store verification token
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // TODO: Send verification email with verificationToken
+    // In production, send email. For development, log the token
+    console.log(`Email verification token for ${user.email}: ${verificationToken}`);
+
+    return { message: 'Verification email sent' };
+  }
+
+  async verifyEmail(token: string) {
+    // Hash the token to find it in the database
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find valid verification token
+    const verificationToken = await prisma.emailVerificationToken.findFirst({
+      where: {
+        tokenHash,
+        usedAt: null,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!verificationToken) {
+      throw new AppError('Invalid or expired verification token', 400);
+    }
+
+    // Update user and mark token as used
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: verificationToken.userId },
+        data: { emailVerified: true },
+      }),
+      prisma.emailVerificationToken.update({
+        where: { id: verificationToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    // Generate tokens for automatic login
+    const accessToken = generateAccessToken(
+      verificationToken.user.id,
+      verificationToken.user.email,
+      verificationToken.user.username
+    );
+
+    const refreshTokenId = crypto.randomUUID();
+    const refreshToken = generateRefreshToken(verificationToken.user.id, refreshTokenId);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    await prisma.refreshToken.create({
+      data: {
+        id: refreshTokenId,
+        userId: verificationToken.user.id,
+        tokenHash: refreshTokenHash,
+        expiresAt,
+      },
+    });
+
+    return {
+      user: {
+        id: verificationToken.user.id,
+        email: verificationToken.user.email,
+        username: verificationToken.user.username,
+        fullName: verificationToken.user.fullName,
+        avatarUrl: verificationToken.user.avatarUrl,
+        emailVerified: true,
+      },
+      accessToken,
+      refreshToken,
+    };
+  }
 }
