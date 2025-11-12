@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Clock,
   Bookmark,
@@ -97,10 +98,8 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
         content.isRead && "opacity-75"
       )}
     >
-      <a
-        href={content.url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={`/dashboard/content/${content.id}`}
         onClick={handleRead}
         className="block"
       >
@@ -234,7 +233,7 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
     </motion.article>
   );
 }
