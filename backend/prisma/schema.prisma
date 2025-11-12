@@ -1,0 +1,236 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String   @map("password_hash")
+  fullName      String?  @map("full_name")
+  avatarUrl     String?  @map("avatar_url")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+  isActive      Boolean  @default(true) @map("is_active")
+
+  preferences       UserPreferences?
+  categories        UserCategory[]
+  interactions      UserContentInteraction[]
+  dailyFeeds        DailyFeed[]
+  activityLogs      UserActivityLog[]
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+  contentFrequency      String   @default("daily") @map("content_frequency")
+  preferredContentTypes Json     @default("[\"video\", \"article\", \"paper\", \"blog\"]") @map("preferred_content_types")
+  notificationEnabled   Boolean  @default(true) @map("notification_enabled")
+  emailDigest           Boolean  @default(true) @map("email_digest")
+  theme                 String   @default("light")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userCategories UserCategory[]
+  contents       Content[]
+  sources        ContentSource[]
+
+  @@map("categories")
+}
+
+model UserCategory {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  categoryId String   @map("category_id")
+  priority   Int      @default(5)
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+  @@index([userId])
+  @@index([priority])
+  @@map("user_categories")
+}
+
+model Content {
+  id              String    @id @default(uuid())
+  externalId      String?   @map("external_id")
+  contentType     String    @map("content_type")
+  source          String
+  categoryId      String    @map("category_id")
+  title           String
+  description     String?
+  url             String
+  thumbnailUrl    String?   @map("thumbnail_url")
+  author          String?
+  publishedAt     DateTime? @map("published_at")
+  duration        Int?
+  wordCount       Int?      @map("word_count")
+  language        String    @default("en")
+  metadata        Json      @default("{}")
+  qualityScore    Decimal   @default(0.5) @map("quality_score") @db.Decimal(3, 2)
+  popularityScore Decimal   @default(0) @map("popularity_score") @db.Decimal(10, 2)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  category     Category                 @relation(fields: [categoryId], references: [id])
+  tags         ContentTag[]
+  interactions UserContentInteraction[]
+  dailyFeeds   DailyFeed[]
+
+  @@unique([externalId, source])
+  @@index([categoryId])
+  @@index([contentType])
+  @@index([publishedAt])
+  @@index([qualityScore])
+  @@index([source])
+  @@map("content")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  contentTags ContentTag[]
+
+  @@map("tags")
+}
+
+model ContentTag {
+  contentId String @map("content_id")
+  tagId     String @map("tag_id")
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contentId, tagId])
+  @@index([contentId])
+  @@index([tagId])
+  @@map("content_tags")
+}
+
+model UserContentInteraction {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  contentId    String    @map("content_id")
+  status       String    @default("unread")
+  readAt       DateTime? @map("read_at")
+  readProgress Decimal   @default(0) @map("read_progress") @db.Decimal(3, 2)
+  timeSpent    Int?      @map("time_spent")
+  rating       Int?
+  isSaved      Boolean   @default(false) @map("is_saved")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@index([userId])
+  @@index([status])
+  @@index([readAt])
+  @@map("user_content_interaction")
+}
+
+model DailyFeed {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  contentId           String   @map("content_id")
+  feedDate            DateTime @map("feed_date") @db.Date
+  recommendationScore Decimal  @map("recommendation_score") @db.Decimal(5, 2)
+  position            Int
+  reason              String?
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId, feedDate])
+  @@index([userId, feedDate])
+  @@index([recommendationScore])
+  @@map("daily_feeds")
+}
+
+model ContentSource {
+  id             String    @id @default(uuid())
+  name           String
+  sourceType     String    @map("source_type")
+  categoryId     String    @map("category_id")
+  sourceUrl      String    @map("source_url")
+  apiKeyEncrypted String?  @map("api_key_encrypted")
+  fetchFrequency String    @default("daily") @map("fetch_frequency")
+  isActive       Boolean   @default(true) @map("is_active")
+  lastFetchedAt  DateTime? @map("last_fetched_at")
+  config         Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([isActive])
+  @@index([categoryId])
+  @@map("content_sources")
+}
+
+model UserActivityLog {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  activityType String   @map("activity_type")
+  entityType   String?  @map("entity_type")
+  entityId     String?  @map("entity_id")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([activityType])
+  @@map("user_activity_log")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
