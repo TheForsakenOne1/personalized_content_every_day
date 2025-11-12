@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -9,13 +9,12 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import {
   Loader2,
-  Mail,
-  User,
   Lock,
   Eye,
   EyeOff,
   CheckCircle2,
   XCircle,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,24 +22,10 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { authApi } from "@/lib/api/auth";
 
-const registerSchema = z
+const resetPasswordSchema = z
   .object({
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Please enter a valid email address"),
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(20, "Username must be at most 20 characters")
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        "Username can only contain letters, numbers, and underscores"
-      ),
-    fullName: z.string().optional(),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -52,16 +37,13 @@ const registerSchema = z
         "Password must contain at least one special character"
       ),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    acceptTerms: z.boolean().refine((val) => val === true, {
-      message: "You must accept the terms and conditions",
-    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 // Password strength checker
 function getPasswordStrength(password: string): {
@@ -89,11 +71,17 @@ function getPasswordStrength(password: string): {
   return { score, label: "Strong", color: "bg-green-500 dark:bg-green-600" };
 }
 
-export default function RegisterPage() {
+export default function ResetPasswordPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = use(params);
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     label: "",
@@ -105,15 +93,11 @@ export default function RegisterPage() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      email: "",
-      username: "",
-      fullName: "",
       password: "",
       confirmPassword: "",
-      acceptTerms: false,
     },
   });
 
@@ -126,22 +110,24 @@ export default function RegisterPage() {
     }
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     setIsLoading(true);
 
     try {
-      const { confirmPassword, acceptTerms, ...registerData } = data;
-      await authApi.register(registerData);
+      await authApi.resetPassword(token, data.password);
 
-      toast.success("Account created successfully!", {
-        description: "Please check your email for verification.",
+      setIsSuccess(true);
+      toast.success("Password reset successful!", {
+        description: "Redirecting to login page...",
       });
 
       setTimeout(() => router.push("/auth/login"), 2000);
     } catch (error) {
-      toast.error("Registration failed", {
+      toast.error("Reset failed", {
         description:
-          error instanceof Error ? error.message : "Please try again later",
+          error instanceof Error
+            ? error.message
+            : "Invalid or expired reset link",
       });
     } finally {
       setIsLoading(false);
@@ -160,97 +146,53 @@ export default function RegisterPage() {
     },
   ];
 
+  if (isSuccess) {
+    return (
+      <AuthLayout
+        title="Password reset successful"
+        subtitle="Your password has been updated"
+        showBackToLogin
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-6"
+        >
+          <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+            <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-gray-600 dark:text-gray-400">
+              Your password has been successfully reset. You can now sign in
+              with your new password.
+            </p>
+          </div>
+
+          <Link href="/auth/login">
+            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all">
+              Continue to login
+            </Button>
+          </Link>
+        </motion.div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
-      title="Create an account"
-      subtitle="Start your personalized learning journey"
+      title="Set new password"
+      subtitle="Enter a strong password for your account"
+      showBackToLogin
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {/* Email Field */}
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
-            Email address
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              className="pl-10"
-              {...register("email")}
-              disabled={isLoading}
-            />
-          </div>
-          {errors.email && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 dark:text-red-400"
-            >
-              {errors.email.message}
-            </motion.p>
-          )}
-        </div>
-
-        {/* Username Field */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="username"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Username
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="username"
-              type="text"
-              placeholder="johndoe"
-              className="pl-10"
-              {...register("username")}
-              disabled={isLoading}
-            />
-          </div>
-          {errors.username && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 dark:text-red-400"
-            >
-              {errors.username.message}
-            </motion.p>
-          )}
-        </div>
-
-        {/* Full Name Field */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="fullName"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Full name <span className="text-gray-400">(optional)</span>
-          </Label>
-          <Input
-            id="fullName"
-            type="text"
-            placeholder="John Doe"
-            {...register("fullName")}
-            disabled={isLoading}
-          />
-        </div>
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Password Field */}
         <div className="space-y-2">
           <Label
             htmlFor="password"
             className="text-gray-700 dark:text-gray-300"
           >
-            Password
+            New password
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -263,6 +205,7 @@ export default function RegisterPage() {
               className="pl-10 pr-10"
               {...register("password")}
               disabled={isLoading}
+              autoFocus
               onChange={(e) => {
                 register("password").onChange(e);
                 setPasswordStrength(getPasswordStrength(e.target.value));
@@ -344,7 +287,7 @@ export default function RegisterPage() {
             htmlFor="confirmPassword"
             className="text-gray-700 dark:text-gray-300"
           >
-            Confirm password
+            Confirm new password
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -382,45 +325,6 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Terms & Conditions */}
-        <div className="space-y-2">
-          <Checkbox
-            id="acceptTerms"
-            label={
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                I agree to the{" "}
-                <Link
-                  href="/terms"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                  target="_blank"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                  target="_blank"
-                >
-                  Privacy Policy
-                </Link>
-              </span>
-            }
-            {...register("acceptTerms")}
-            disabled={isLoading}
-          />
-          {errors.acceptTerms && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 dark:text-red-400"
-            >
-              {errors.acceptTerms.message}
-            </motion.p>
-          )}
-        </div>
-
-        {/* Submit Button */}
         <Button
           type="submit"
           className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
@@ -429,25 +333,12 @@ export default function RegisterPage() {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating account...
+              Resetting password...
             </>
           ) : (
-            "Create account"
+            "Reset password"
           )}
         </Button>
-
-        {/* Sign In Link */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
       </form>
     </AuthLayout>
   );
