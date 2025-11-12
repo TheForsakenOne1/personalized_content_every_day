@@ -12,7 +12,9 @@ The platform uses n8n to automatically fetch, process, and store educational con
 
 ## Workflows
 
-### 1. YouTube Content Aggregator
+### Basic Workflows (Phase 2.1)
+
+#### 1. YouTube Content Aggregator (Basic)
 **File**: `workflows/youtube-content-aggregator.json`
 
 **Schedule**: Daily at 6:00 AM
@@ -36,7 +38,7 @@ where engagementRate = (likes + comments) / views
 - `search_query` - Search keywords
 - `max_videos` - Maximum videos per source (default: 10)
 
-### 2. arXiv Research Paper Aggregator
+#### 2. arXiv Research Paper Aggregator (Basic)
 **File**: `workflows/arxiv-paper-aggregator.json`
 
 **Schedule**: Daily at 7:00 AM
@@ -63,7 +65,7 @@ Base score: 0.7 (research papers are high quality)
 - `categories` - arXiv categories to filter
 - `max_results` - Maximum papers per query (default: 10)
 
-### 3. RSS Feed Aggregator
+#### 3. RSS Feed Aggregator (Basic)
 **File**: `workflows/rss-feed-aggregator.json`
 
 **Schedule**: Every 6 hours
@@ -91,6 +93,281 @@ Base score: 0.6
 - `feed_url` - RSS/Atom feed URL
 - `extract_full_text` - Attempt to fetch full article
 - `keywords` - Filter by keywords
+
+---
+
+### Advanced Workflows (Phase 2.2)
+
+#### 4. YouTube Content Fetcher - Advanced
+**File**: `workflows/youtube-content-fetcher-advanced.json`
+
+**Schedule**: Daily at 6:00 AM
+
+**Features**:
+- Enhanced quality filtering with configurable thresholds
+- Advanced engagement scoring algorithm
+- Educational content detection (bonus for tutorial keywords)
+- Automatic tagging based on content analysis
+- Duration filtering (5-60 minutes by default)
+- Handles both channel subscriptions and search queries
+- Comprehensive error handling and retry logic
+- Execution logging to database
+
+**Quality Scoring Algorithm**:
+```javascript
+// Base score
+let qualityScore = 0.3;
+
+// Engagement bonus (max +0.4)
+if (viewCount > 0) {
+  const engagementRate = (likeCount + commentCount) / viewCount;
+  qualityScore += Math.min(engagementRate * 50, 0.4);
+}
+
+// Duration bonus (+0.1 for 10-30 min videos)
+if (duration >= 600 && duration <= 1800) {
+  qualityScore += 0.1;
+}
+
+// Recency bonus (+0.1 if < 30 days old)
+if (daysOld < 30) {
+  qualityScore += 0.1;
+}
+
+// Educational keywords bonus (+0.1)
+if (title.includes('tutorial', 'learn', 'explained', 'introduction')) {
+  qualityScore += 0.1;
+}
+```
+
+**Auto-tagging**:
+- Tutorial/educational content
+- Difficulty level (beginner-friendly, intermediate, advanced)
+- Topic-specific tags based on title analysis
+- Video length categories (short, medium, long)
+
+**Configuration**:
+- Minimum views threshold
+- Duration range (min/max seconds)
+- Quality score threshold
+- Maximum videos per source
+
+#### 5. Research Paper Aggregator - Advanced
+**File**: `workflows/research-paper-aggregator-advanced.json`
+
+**Schedule**: Daily at 7:00 AM
+
+**Features**:
+- Multi-source support (arXiv and PubMed)
+- Advanced XML parsing with error handling
+- Cross-disciplinary paper detection
+- Rich metadata extraction (DOI, categories, keywords)
+- Medical specialty detection for PubMed
+- Automatic categorization and tagging
+- Quality filtering based on abstract length and recency
+
+**Sources**:
+1. **arXiv**: Computer science, physics, mathematics, and more
+2. **PubMed**: Medical and life sciences research
+
+**Quality Scoring - arXiv**:
+```javascript
+Base score: 0.7
+
+// Abstract quality (+0.1)
+if (abstractWords >= 150 && abstractWords <= 500) {
+  qualityScore += 0.1;
+}
+
+// Recency bonus
+if (daysOld < 7) qualityScore += 0.1;
+else if (daysOld < 30) qualityScore += 0.05;
+
+// Cross-disciplinary bonus (+0.05)
+if (categories.length > 1) {
+  qualityScore += 0.05;
+}
+
+// Complete metadata bonus (+0.05)
+if (hasDOI && hasComment) {
+  qualityScore += 0.05;
+}
+```
+
+**Quality Scoring - PubMed**:
+```javascript
+Base score: 0.75
+
+// Abstract quality (+0.1)
+if (abstractWords >= 150 && abstractWords <= 500) {
+  qualityScore += 0.1;
+}
+
+// Recency bonus
+if (daysOld < 30) qualityScore += 0.1;
+else if (daysOld < 180) qualityScore += 0.05;
+
+// Rich metadata (+0.05)
+if (keywords.length > 5) {
+  qualityScore += 0.05;
+}
+```
+
+**Auto-tagging**:
+- Academic disciplines (cs, physics, biology, etc.)
+- Research type (survey, novel, experimental)
+- Medical specialties (oncology, cardiology, neuroscience)
+- Difficulty level
+- Topic-specific tags (AI, quantum, climate, etc.)
+
+#### 6. Article/Blog Scraper - Advanced
+**File**: `workflows/article-blog-scraper-advanced.json`
+
+**Schedule**: Every 6 hours
+
+**Features**:
+- Dual-mode operation: RSS feeds and web scraping
+- Intelligent content extraction using Cheerio
+- Full-text extraction with fallback
+- Content enhancement and cleaning
+- Automatic thumbnail detection
+- Reading time estimation
+- Quality filtering based on content length and metadata
+- Keyword-based filtering
+
+**Processing Modes**:
+
+1. **RSS Mode**:
+   - Parse RSS/Atom feeds
+   - Extract clean text from HTML
+   - Filter by publication date (last 24 hours)
+   - Optional keyword filtering
+   - Preserve feed metadata
+
+2. **Web Scraping Mode**:
+   - Smart article detection using multiple selectors
+   - Extract title, content, author, date
+   - Resolve relative URLs to absolute
+   - Image thumbnail extraction
+   - Handle various website structures
+
+**Quality Scoring**:
+```javascript
+Base score: 0.5 (RSS) or 0.6 (feed)
+
+// Word count bonus
+if (wordCount >= 500 && wordCount <= 2000) {
+  qualityScore += 0.2;  // Ideal length
+} else if (wordCount >= 300) {
+  qualityScore += 0.1;  // Acceptable
+}
+
+// Known author (+0.1)
+if (author && author !== 'Unknown') {
+  qualityScore += 0.1;
+}
+
+// Visual content (+0.05)
+if (hasThumbnail) {
+  qualityScore += 0.05;
+}
+
+// Rich metadata (+0.05)
+if (hasCategories) {
+  qualityScore += 0.05;
+}
+
+// Full text extracted (+0.1)
+if (fullTextExtracted) {
+  qualityScore += 0.1;
+}
+```
+
+**Auto-tagging**:
+- Content type (tutorial, guide, review, opinion, interview, news)
+- Topic detection (AI, web development, data science, cloud, security)
+- Programming languages (Python, JavaScript, etc.)
+- Reading time (quick-read, long-read)
+- Difficulty level
+
+**Configuration**:
+- Article selectors (CSS selectors)
+- Keywords for filtering
+- Full-text extraction toggle
+- Minimum word count
+
+#### 7. Daily Recommendation Engine
+**File**: `workflows/daily-recommendation-engine.json`
+
+**Schedule**: Daily at 5:00 AM (before content aggregation)
+
+**Features**:
+- Personalized recommendations per user
+- Multi-factor recommendation algorithm
+- Read history tracking and duplicate avoidance
+- Content diversity across categories
+- Priority-based category weighting
+- Configurable content mix (papers, videos, articles)
+- Daily feed generation and storage
+- Optional email notifications
+
+**Process Flow**:
+1. Fetch all active users with category subscriptions
+2. Load user's category priorities and preferences
+3. Analyze read history (last 30 days)
+4. Calculate content type preferences
+5. Generate recommendations per category:
+   - 1 high-quality research paper per category
+   - 3 videos per category (weighted by priority)
+   - 5 articles per category (weighted by priority)
+6. Apply diversity and freshness filters
+7. Organize into personalized daily feed (max 20 items)
+8. Store recommendations in database
+9. Prepare email notifications (optional)
+
+**Recommendation Scoring**:
+
+**Papers**:
+```javascript
+score = (quality_score * 0.5) +
+        (popularity_score * 0.3) +
+        (recency_bonus * 0.2)
+```
+
+**Videos**:
+```javascript
+score = (quality_score * 0.4) +
+        (popularity_score / 100000 * 0.3) +
+        (recency_bonus * 0.2) +
+        (category_weight * 0.2)
+```
+
+**Articles**:
+```javascript
+score = (quality_score * 0.5) +
+        (recency_bonus * 0.3) +
+        (category_weight * 0.2)
+```
+
+**Filters**:
+- Exclude already-read content (last 30 days)
+- Papers: Published in last 90 days, quality ≥ 0.7
+- Videos: Published in last 30 days, quality ≥ 0.6, duration 5-60 min
+- Articles: Published in last 7 days, quality ≥ 0.5, word count 300-3000
+
+**Feed Organization**:
+- Categories sorted by user priority
+- Content mix adjusted based on category weight
+- Maximum 20 items per user per day
+- Balanced distribution across categories
+- Ensures at least 2 items per active category
+
+**Email Notification** (Optional):
+- Daily digest format
+- Grouped by category
+- Includes thumbnails and descriptions
+- Direct links to content
+- Reading time / duration estimates
 
 ## Setup Instructions
 

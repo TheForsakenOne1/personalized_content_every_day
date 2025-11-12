@@ -1,0 +1,466 @@
+{
+  "name": "Daily Recommendation Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Runs daily at 5:00 AM"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  u.id as user_id,\n  u.email,\n  u.username,\n  json_agg(\n    json_build_object(\n      'category_id', c.id,\n      'category_slug', c.slug,\n      'category_name', c.name,\n      'priority', uc.priority,\n      'is_active', uc.is_active\n    ) ORDER BY uc.priority DESC\n  ) as subscribed_categories\nFROM users u\nJOIN user_categories uc ON u.id = uc.user_id\nJOIN categories c ON uc.category_id = c.id\nWHERE uc.is_active = TRUE\n  AND u.email_verified = TRUE\nGROUP BY u.id, u.email, u.username\nHAVING COUNT(uc.category_id) > 0;"
+      },
+      "id": "fetch-users",
+      "name": "Fetch Active Users",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process each user's preferences\nconst users = [];\n\nfor (const item of $input.all()) {\n  const user = item.json;\n  \n  // Parse categories\n  const categories = JSON.parse(user.subscribed_categories);\n  \n  // Sort by priority (highest first)\n  categories.sort((a, b) => b.priority - a.priority);\n  \n  // Calculate weights for each category based on priority\n  const totalPriority = categories.reduce((sum, cat) => sum + cat.priority, 0);\n  \n  categories.forEach(cat => {\n    cat.weight = cat.priority / totalPriority;\n  });\n  \n  users.push({\n    userId: user.user_id,\n    email: user.email,\n    username: user.username,\n    categories: categories\n  });\n}\n\nreturn users.map(user => ({ json: user }));"
+      },
+      "id": "process-preferences",
+      "name": "Process User Preferences",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=-- Get user's read history\nSELECT \n  c.id,\n  c.content_type,\n  ci.created_at as interacted_at\nFROM content_interactions ci\nJOIN content c ON ci.content_id = c.id\nWHERE ci.user_id = '{{$json.userId}}'\n  AND ci.status IN ('read', 'in_progress')\n  AND ci.created_at > NOW() - INTERVAL '30 days'\nORDER BY ci.created_at DESC\nLIMIT 100;"
+      },
+      "id": "fetch-read-history",
+      "name": "Fetch Read History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Analyze user's content consumption patterns\nconst user = $node['Process User Preferences'].json;\nconst readHistory = $input.all().map(item => item.json);\n\n// Calculate content type preferences\nconst contentTypeCount = {};\nreadHistory.forEach(item => {\n  contentTypeCount[item.content_type] = (contentTypeCount[item.content_type] || 0) + 1;\n});\n\nconst totalRead = readHistory.length;\nconst contentTypePreferences = {};\nObject.keys(contentTypeCount).forEach(type => {\n  contentTypePreferences[type] = contentTypeCount[type] / totalRead;\n});\n\n// Get IDs of already read content to exclude\nconst readContentIds = readHistory.map(item => item.id);\n\n// Calculate recency factor (more weight to recent reads)\nconst recentReads = readHistory.filter(item => {\n  const daysSince = (Date.now() - new Date(item.interacted_at).getTime()) / (1000 * 60 * 60 * 24);\n  return daysSince <= 7;\n}).length;\n\nconst engagementScore = Math.min((recentReads / 7), 1); // Normalize to 0-1\n\nreturn [{\n  json: {\n    ...user,\n    contentTypePreferences,\n    readContentIds,\n    engagementScore,\n    totalReadLast30Days: totalRead\n  }\n}];"
+      },
+      "id": "analyze-patterns",
+      "name": "Analyze User Patterns",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=-- Select one high-quality paper per category\nWITH user_categories AS (\n  SELECT unnest(ARRAY[{{$json.categories.map(c => \"'\" + c.category_id + \"'\").join(',')}}]::uuid[]) as category_id\n),\nranked_papers AS (\n  SELECT \n    c.*,\n    cat.name as category_name,\n    cat.slug as category_slug,\n    ROW_NUMBER() OVER (\n      PARTITION BY c.category_id \n      ORDER BY \n        c.quality_score * 0.5 + \n        c.popularity_score * 0.3 + \n        (CASE WHEN c.published_at > NOW() - INTERVAL '7 days' THEN 0.2 ELSE 0 END) DESC\n    ) as rank\n  FROM content c\n  JOIN categories cat ON c.category_id = cat.id\n  WHERE c.category_id IN (SELECT category_id FROM user_categories)\n    AND c.content_type = 'paper'\n    AND c.published_at > NOW() - INTERVAL '90 days'\n    {{$json.readContentIds.length > 0 ? \"AND c.id NOT IN (SELECT unnest(ARRAY['\" + $json.readContentIds.join(\"','\") + \"']::uuid[]))\" : \"\"}}\n    AND c.quality_score >= 0.7\n)\nSELECT \n  id,\n  external_id,\n  content_type,\n  source,\n  category_id,\n  category_name,\n  category_slug,\n  title,\n  description,\n  url,\n  thumbnail_url,\n  author,\n  published_at,\n  duration,\n  word_count,\n  language,\n  quality_score,\n  popularity_score,\n  'paper' as recommendation_type\nFROM ranked_papers\nWHERE rank = 1\nORDER BY quality_score DESC;"
+      },
+      "id": "select-papers",
+      "name": "Select Papers (1 per category)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=-- Select videos based on user preferences\nWITH user_categories AS (\n  SELECT unnest(ARRAY[{{$json.categories.map(c => \"'\" + c.category_id + \"'\").join(',')}}]::uuid[]) as category_id,\n         unnest(ARRAY[{{$json.categories.map(c => c.weight).join(',')}}]) as weight\n),\nranked_videos AS (\n  SELECT \n    c.*,\n    cat.name as category_name,\n    cat.slug as category_slug,\n    uc.weight as category_weight,\n    (\n      c.quality_score * 0.4 + \n      (c.popularity_score / 100000.0) * 0.3 +\n      (CASE WHEN c.published_at > NOW() - INTERVAL '7 days' THEN 0.2 ELSE 0.1 END) +\n      uc.weight * 0.2\n    ) as recommendation_score,\n    ROW_NUMBER() OVER (\n      PARTITION BY c.category_id \n      ORDER BY (\n        c.quality_score * 0.4 + \n        (c.popularity_score / 100000.0) * 0.3 +\n        (CASE WHEN c.published_at > NOW() - INTERVAL '7 days' THEN 0.2 ELSE 0.1 END) +\n        uc.weight * 0.2\n      ) DESC\n    ) as rank\n  FROM content c\n  JOIN categories cat ON c.category_id = cat.id\n  JOIN user_categories uc ON c.category_id = uc.category_id\n  WHERE c.content_type = 'video'\n    AND c.published_at > NOW() - INTERVAL '30 days'\n    {{$json.readContentIds.length > 0 ? \"AND c.id NOT IN (SELECT unnest(ARRAY['\" + $json.readContentIds.join(\"','\") + \"']::uuid[]))\" : \"\"}}\n    AND c.quality_score >= 0.6\n    AND c.duration BETWEEN 300 AND 3600\n)\nSELECT \n  id,\n  external_id,\n  content_type,\n  source,\n  category_id,\n  category_name,\n  category_slug,\n  title,\n  description,\n  url,\n  thumbnail_url,\n  author,\n  published_at,\n  duration,\n  word_count,\n  language,\n  quality_score,\n  popularity_score,\n  recommendation_score,\n  'video' as recommendation_type\nFROM ranked_videos\nWHERE rank <= 3\nORDER BY recommendation_score DESC\nLIMIT 10;"
+      },
+      "id": "select-videos",
+      "name": "Select Videos (3 per category)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=-- Select articles based on user preferences\nWITH user_categories AS (\n  SELECT unnest(ARRAY[{{$json.categories.map(c => \"'\" + c.category_id + \"'\").join(',')}}]::uuid[]) as category_id,\n         unnest(ARRAY[{{$json.categories.map(c => c.weight).join(',')}}]) as weight\n),\nranked_articles AS (\n  SELECT \n    c.*,\n    cat.name as category_name,\n    cat.slug as category_slug,\n    uc.weight as category_weight,\n    (\n      c.quality_score * 0.5 + \n      (CASE WHEN c.published_at > NOW() - INTERVAL '3 days' THEN 0.3 ELSE 0.1 END) +\n      uc.weight * 0.2\n    ) as recommendation_score,\n    ROW_NUMBER() OVER (\n      PARTITION BY c.category_id \n      ORDER BY (\n        c.quality_score * 0.5 + \n        (CASE WHEN c.published_at > NOW() - INTERVAL '3 days' THEN 0.3 ELSE 0.1 END) +\n        uc.weight * 0.2\n      ) DESC\n    ) as rank\n  FROM content c\n  JOIN categories cat ON c.category_id = cat.id\n  JOIN user_categories uc ON c.category_id = uc.category_id\n  WHERE c.content_type IN ('article', 'blog')\n    AND c.published_at > NOW() - INTERVAL '7 days'\n    {{$json.readContentIds.length > 0 ? \"AND c.id NOT IN (SELECT unnest(ARRAY['\" + $json.readContentIds.join(\"','\") + \"']::uuid[]))\" : \"\"}}\n    AND c.quality_score >= 0.5\n    AND c.word_count BETWEEN 300 AND 3000\n)\nSELECT \n  id,\n  external_id,\n  content_type,\n  source,\n  category_id,\n  category_name,\n  category_slug,\n  title,\n  description,\n  url,\n  thumbnail_url,\n  author,\n  published_at,\n  duration,\n  word_count,\n  language,\n  quality_score,\n  popularity_score,\n  recommendation_score,\n  'article' as recommendation_type\nFROM ranked_articles\nWHERE rank <= 5\nORDER BY recommendation_score DESC\nLIMIT 15;"
+      },
+      "id": "select-articles",
+      "name": "Select Articles (5 per category)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 400],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "merge-recommendations",
+      "name": "Merge All Recommendations",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Organize recommendations by category and apply diversity\nconst user = $node['Analyze User Patterns'].json;\nconst allContent = $input.all().map(item => item.json);\n\n// Group by category\nconst byCategory = {};\nallContent.forEach(content => {\n  const catSlug = content.category_slug;\n  if (!byCategory[catSlug]) {\n    byCategory[catSlug] = {\n      categoryId: content.category_id,\n      categoryName: content.category_name,\n      categorySlug: catSlug,\n      papers: [],\n      videos: [],\n      articles: []\n    };\n  }\n  \n  if (content.content_type === 'paper') {\n    byCategory[catSlug].papers.push(content);\n  } else if (content.content_type === 'video') {\n    byCategory[catSlug].videos.push(content);\n  } else {\n    byCategory[catSlug].articles.push(content);\n  }\n});\n\n// Sort categories by user priority\nconst sortedCategories = Object.keys(byCategory).sort((a, b) => {\n  const catA = user.categories.find(c => c.category_slug === a);\n  const catB = user.categories.find(c => c.category_slug === b);\n  return (catB?.priority || 0) - (catA?.priority || 0);\n});\n\n// Build daily feed\nconst dailyFeed = {\n  userId: user.userId,\n  email: user.email,\n  username: user.username,\n  generatedAt: new Date().toISOString(),\n  categories: []\n};\n\nlet totalItems = 0;\nconst maxItemsPerUser = 20;\n\nfor (const catSlug of sortedCategories) {\n  if (totalItems >= maxItemsPerUser) break;\n  \n  const cat = byCategory[catSlug];\n  const userCat = user.categories.find(c => c.category_slug === catSlug);\n  \n  // Calculate how many items for this category based on priority\n  const itemsForCategory = Math.max(\n    2,\n    Math.ceil(maxItemsPerUser * (userCat?.weight || 0.1))\n  );\n  \n  const categoryFeed = {\n    categoryId: cat.categoryId,\n    categoryName: cat.categoryName,\n    categorySlug: catSlug,\n    priority: userCat?.priority || 5,\n    content: []\n  };\n  \n  // Add 1 paper if available\n  if (cat.papers.length > 0) {\n    categoryFeed.content.push(cat.papers[0]);\n    totalItems++;\n  }\n  \n  // Add videos\n  const videosToAdd = Math.min(cat.videos.length, Math.floor(itemsForCategory * 0.4));\n  for (let i = 0; i < videosToAdd && totalItems < maxItemsPerUser; i++) {\n    categoryFeed.content.push(cat.videos[i]);\n    totalItems++;\n  }\n  \n  // Add articles\n  const articlesNeeded = Math.min(\n    cat.articles.length,\n    itemsForCategory - categoryFeed.content.length\n  );\n  for (let i = 0; i < articlesNeeded && totalItems < maxItemsPerUser; i++) {\n    categoryFeed.content.push(cat.articles[i]);\n    totalItems++;\n  }\n  \n  if (categoryFeed.content.length > 0) {\n    dailyFeed.categories.push(categoryFeed);\n  }\n}\n\n// Calculate feed stats\ndailyFeed.stats = {\n  totalItems,\n  totalCategories: dailyFeed.categories.length,\n  paperCount: allContent.filter(c => c.content_type === 'paper').length,\n  videoCount: allContent.filter(c => c.content_type === 'video').length,\n  articleCount: allContent.filter(c => c.content_type === 'article').length\n};\n\nreturn [{ json: dailyFeed }];"
+      },
+      "id": "organize-feed",
+      "name": "Organize Daily Feed",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Store recommendations in database\nconst feed = $input.item.json;\nconst contentItems = [];\n\nfeed.categories.forEach(cat => {\n  cat.content.forEach((content, index) => {\n    contentItems.push({\n      userId: feed.userId,\n      contentId: content.id,\n      categoryId: cat.categoryId,\n      recommendationScore: content.recommendation_score || 0,\n      position: index + 1,\n      categoryPosition: cat.content.length\n    });\n  });\n});\n\nreturn contentItems.map(item => ({ json: item }));"
+      },
+      "id": "prepare-recommendations",
+      "name": "Prepare Recommendation Records",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO daily_recommendations (\n  user_id,\n  content_id,\n  recommendation_date,\n  recommendation_score,\n  position\n) VALUES (\n  '{{$json.userId}}',\n  '{{$json.contentId}}',\n  CURRENT_DATE,\n  {{$json.recommendationScore}},\n  {{$json.position}}\n)\nON CONFLICT (user_id, content_id, recommendation_date) DO UPDATE\nSET recommendation_score = {{$json.recommendationScore}},\n    position = {{$json.position}}\nRETURNING *;"
+      },
+      "id": "save-recommendations",
+      "name": "Save Recommendations",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2050, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare email notification data\nconst feed = $node['Organize Daily Feed'].json;\n\n// Format content for email\nconst emailContent = {\n  to: feed.email,\n  subject: `Your Daily Educational Feed - ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,\n  username: feed.username,\n  totalItems: feed.stats.totalItems,\n  categories: feed.categories.map(cat => ({\n    name: cat.categoryName,\n    items: cat.content.map(content => ({\n      type: content.content_type,\n      title: content.title,\n      description: content.description.substring(0, 200) + '...',\n      url: content.url,\n      author: content.author,\n      thumbnail: content.thumbnail_url,\n      duration: content.duration ? Math.ceil(content.duration / 60) + ' min' : null,\n      wordCount: content.word_count ? Math.ceil(content.word_count / 200) + ' min read' : null,\n      publishedAt: new Date(content.published_at).toLocaleDateString()\n    }))\n  }))\n};\n\nreturn [{ json: emailContent }];"
+      },
+      "id": "prepare-email",
+      "name": "Prepare Email Notification",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2250, 200],
+      "notes": "Optional: Send email to users"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Format summary for this user\nconst feed = $node['Organize Daily Feed'].json;\nconst recommendations = $('Save Recommendations').all();\n\nreturn [{\n  json: {\n    userId: feed.userId,\n    username: feed.username,\n    email: feed.email,\n    recommendationsGenerated: recommendations.length,\n    totalItems: feed.stats.totalItems,\n    categoriesIncluded: feed.stats.totalCategories,\n    breakdown: {\n      papers: feed.stats.paperCount,\n      videos: feed.stats.videoCount,\n      articles: feed.stats.articleCount\n    }\n  }\n}];"
+      },
+      "id": "format-user-summary",
+      "name": "Format User Summary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2250, 300]
+    },
+    {
+      "parameters": {},
+      "id": "aggregate-summaries",
+      "name": "Aggregate All User Summaries",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [2450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Create final execution summary\nconst allUsers = $input.all().map(item => item.json);\n\nconst totalUsers = allUsers.length;\nconst totalRecommendations = allUsers.reduce((sum, u) => sum + u.recommendationsGenerated, 0);\nconst totalPapers = allUsers.reduce((sum, u) => sum + u.breakdown.papers, 0);\nconst totalVideos = allUsers.reduce((sum, u) => sum + u.breakdown.videos, 0);\nconst totalArticles = allUsers.reduce((sum, u) => sum + u.breakdown.articles, 0);\nconst avgRecommendationsPerUser = totalRecommendations / totalUsers;\n\nreturn [{\n  json: {\n    workflow: 'Daily Recommendation Engine',\n    executedAt: new Date().toISOString(),\n    stats: {\n      totalUsersProcessed: totalUsers,\n      totalRecommendationsGenerated: totalRecommendations,\n      avgRecommendationsPerUser: Math.round(avgRecommendationsPerUser * 10) / 10,\n      contentBreakdown: {\n        papers: totalPapers,\n        videos: totalVideos,\n        articles: totalArticles\n      },\n      usersWithRecommendations: allUsers.filter(u => u.recommendationsGenerated > 0).length,\n      usersWithoutContent: allUsers.filter(u => u.recommendationsGenerated === 0).length\n    },\n    success: true\n  }\n}];"
+      },
+      "id": "format-summary",
+      "name": "Format Execution Summary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, summary)\nVALUES (\n  '{{$json.workflow}}',\n  '{{$json.executedAt}}',\n  'success',\n  '{{JSON.stringify($json.stats).replace(/'/g, \"''\")}}'::jsonb\n);"
+      },
+      "id": "log-execution",
+      "name": "Log Execution",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2850, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Error in Daily Recommendation Engine: {{$json.message}}"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [1650, 550]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, error_message)\nVALUES (\n  'Daily Recommendation Engine',\n  NOW(),\n  'failed',\n  $${{$json.message.replace(/'/g, \"''\")}}$$\n);"
+      },
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1850, 550],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Users": {
+      "main": [
+        [
+          {
+            "node": "Process User Preferences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process User Preferences": {
+      "main": [
+        [
+          {
+            "node": "Fetch Read History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Read History": {
+      "main": [
+        [
+          {
+            "node": "Analyze User Patterns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze User Patterns": {
+      "main": [
+        [
+          {
+            "node": "Select Papers (1 per category)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select Videos (3 per category)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select Articles (5 per category)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Papers (1 per category)": {
+      "main": [
+        [
+          {
+            "node": "Merge All Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Videos (3 per category)": {
+      "main": [
+        [
+          {
+            "node": "Merge All Recommendations",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Select Articles (5 per category)": {
+      "main": [
+        [
+          {
+            "node": "Merge All Recommendations",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge All Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Organize Daily Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organize Daily Feed": {
+      "main": [
+        [
+          {
+            "node": "Prepare Recommendation Records",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Recommendation Records": {
+      "main": [
+        [
+          {
+            "node": "Save Recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Recommendations": {
+      "main": [
+        [
+          {
+            "node": "Format User Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format User Summary": {
+      "main": [
+        [
+          {
+            "node": "Aggregate All User Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate All User Summaries": {
+      "main": [
+        [
+          {
+            "node": "Format Execution Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Execution Summary": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "executionTimeout": 7200
+  },
+  "meta": {
+    "instanceId": "n8n-instance-1"
+  },
+  "tags": [
+    {
+      "name": "recommendations"
+    },
+    {
+      "name": "daily-feed"
+    }
+  ]
+}

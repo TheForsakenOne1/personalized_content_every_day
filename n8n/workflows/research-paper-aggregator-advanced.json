@@ -1,0 +1,576 @@
+{
+  "name": "Research Paper Aggregator - Advanced",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cs.id, cs.name, cs.source_type, cs.source_url, cs.config, c.slug as category_slug\nFROM content_sources cs\nJOIN categories c ON cs.category_id = c.id\nWHERE cs.source_type IN ('api', 'arxiv', 'pubmed')\nAND cs.is_active = TRUE\nAND (cs.last_fetch_at IS NULL OR cs.last_fetch_at < NOW() - INTERVAL '1 day')\nORDER BY cs.last_fetch_at NULLS FIRST;"
+      },
+      "id": "fetch-sources",
+      "name": "Fetch Active Sources",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.source_url}}",
+              "operation": "contains",
+              "value2": "arxiv.org"
+            }
+          ]
+        }
+      },
+      "id": "check-source-type",
+      "name": "Check Source Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://export.arxiv.org/api/query?{{$json.config.search_query || 'search_query=all'}}&max_results={{$json.config.max_results || 20}}&sortBy=submittedDate&sortOrder=descending",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-arxiv",
+      "name": "Fetch arXiv Papers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 200],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={{$json.config.search_query}}&retmax={{$json.config.max_results || 20}}&sort=pub_date&retmode=json",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-pubmed",
+      "name": "Fetch PubMed Papers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse arXiv XML response\nconst xml2js = require('xml2js');\nconst parser = new xml2js.Parser();\n\nconst items = [];\nconst sourceId = $node['Fetch Active Sources'].json.id;\nconst categorySlug = $node['Fetch Active Sources'].json.category_slug;\n\ntry {\n  const result = await parser.parseStringPromise($input.item.json.body);\n  const entries = result.feed.entry || [];\n  \n  for (const entry of entries) {\n    const published = new Date(entry.published[0]);\n    const updated = new Date(entry.updated[0]);\n    const daysOld = (Date.now() - published.getTime()) / (1000 * 60 * 60 * 24);\n    \n    // Extract arXiv ID\n    const arxivId = entry.id[0].split('/abs/')[1];\n    \n    // Extract categories\n    const categories = entry.category ? entry.category.map(c => c.$.term) : [];\n    const primaryCategory = entry['arxiv:primary_category'] ? \n      entry['arxiv:primary_category'][0].$.term : categories[0];\n    \n    // Extract authors\n    const authors = entry.author ? \n      entry.author.map(a => a.name[0]).join(', ') : 'Unknown';\n    \n    // Get abstract\n    const abstract = entry.summary[0].replace(/\\n/g, ' ').trim();\n    const abstractWords = abstract.split(/\\s+/).length;\n    \n    // Calculate quality score\n    let qualityScore = 0.7; // Base score for research papers\n    \n    // Bonus for good abstract length (150-500 words)\n    if (abstractWords >= 150 && abstractWords <= 500) {\n      qualityScore += 0.1;\n    }\n    \n    // Bonus for recent publication\n    if (daysOld < 7) {\n      qualityScore += 0.1;\n    } else if (daysOld < 30) {\n      qualityScore += 0.05;\n    }\n    \n    // Bonus for cross-disciplinary (multiple categories)\n    if (categories.length > 1) {\n      qualityScore += 0.05;\n    }\n    \n    // Bonus for complete metadata\n    if (entry.doi && entry['arxiv:comment']) {\n      qualityScore += 0.05;\n    }\n    \n    // Auto-tagging based on categories and title\n    const tags = [];\n    const title = entry.title[0].toLowerCase();\n    \n    // Category-based tags\n    if (primaryCategory.startsWith('cs.')) tags.push('computer-science');\n    if (primaryCategory.startsWith('physics.')) tags.push('physics');\n    if (primaryCategory.startsWith('math.')) tags.push('mathematics');\n    if (primaryCategory.includes('AI') || primaryCategory.includes('ML')) tags.push('artificial-intelligence');\n    \n    // Content-based tags\n    if (title.includes('survey') || title.includes('review')) tags.push('survey');\n    if (title.includes('deep learning') || title.includes('neural')) tags.push('deep-learning');\n    if (title.includes('quantum')) tags.push('quantum');\n    if (title.includes('climate') || title.includes('environment')) tags.push('climate');\n    \n    // Difficulty detection\n    if (title.includes('introduction') || title.includes('tutorial')) {\n      tags.push('beginner-friendly');\n    } else if (title.includes('advanced') || title.includes('novel')) {\n      tags.push('advanced');\n    } else {\n      tags.push('intermediate');\n    }\n    \n    items.push({\n      sourceId,\n      externalId: arxivId,\n      contentType: 'paper',\n      source: 'arxiv',\n      categorySlug,\n      title: entry.title[0].replace(/\\n/g, ' ').trim(),\n      description: abstract.substring(0, 1000), // Limit to 1000 chars\n      url: entry.id[0],\n      pdfUrl: entry.link.find(l => l.$.type === 'application/pdf')?.$.href || null,\n      author: authors.substring(0, 255), // Database limit\n      publishedAt: published.toISOString(),\n      updatedAt: updated.toISOString(),\n      wordCount: abstractWords,\n      language: 'en',\n      metadata: {\n        arxivId,\n        primaryCategory,\n        allCategories: categories,\n        doi: entry.doi ? entry.doi[0] : null,\n        comment: entry['arxiv:comment'] ? entry['arxiv:comment'][0] : null,\n        journalRef: entry['arxiv:journal_ref'] ? entry['arxiv:journal_ref'][0] : null\n      },\n      qualityScore: Math.min(qualityScore, 1.0),\n      popularityScore: 0, // arXiv doesn't provide view counts\n      tags\n    });\n  }\n} catch (error) {\n  console.error('Error parsing arXiv XML:', error.message);\n  throw new Error(`Failed to parse arXiv response: ${error.message}`);\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "parse-arxiv",
+      "name": "Parse arXiv Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse PubMed JSON response and fetch details\nconst items = [];\nconst sourceId = $node['Fetch Active Sources'].json.id;\nconst categorySlug = $node['Fetch Active Sources'].json.category_slug;\n\ntry {\n  const response = $input.item.json;\n  const idList = response.esearchresult?.idlist || [];\n  \n  if (idList.length === 0) {\n    return [];\n  }\n  \n  // Store IDs for next step to fetch details\n  return [{\n    json: {\n      sourceId,\n      categorySlug,\n      pmids: idList\n    }\n  }];\n  \n} catch (error) {\n  console.error('Error parsing PubMed response:', error.message);\n  throw new Error(`Failed to parse PubMed response: ${error.message}`);\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "parse-pubmed",
+      "name": "Parse PubMed IDs",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={{$json.pmids.join(',')}}&retmode=xml",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-pubmed-details",
+      "name": "Fetch PubMed Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 400],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse PubMed XML details\nconst xml2js = require('xml2js');\nconst parser = new xml2js.Parser();\n\nconst items = [];\nconst sourceId = $node['Parse PubMed IDs'].json.sourceId;\nconst categorySlug = $node['Parse PubMed IDs'].json.categorySlug;\n\ntry {\n  const result = await parser.parseStringPromise($input.item.json.body);\n  const articles = result.PubmedArticleSet?.PubmedArticle || [];\n  \n  for (const article of articles) {\n    const medline = article.MedlineCitation[0];\n    const pubmedData = article.PubmedData[0];\n    \n    const pmid = medline.PMID[0]._;\n    const articleData = medline.Article[0];\n    \n    // Get publication date\n    const pubDate = articleData.Journal[0].JournalIssue[0].PubDate[0];\n    const year = pubDate.Year ? pubDate.Year[0] : new Date().getFullYear();\n    const month = pubDate.Month ? pubDate.Month[0] : '01';\n    const day = pubDate.Day ? pubDate.Day[0] : '01';\n    const publishedAt = new Date(`${year}-${month}-${day}`);\n    const daysOld = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);\n    \n    // Extract title\n    const title = articleData.ArticleTitle[0];\n    \n    // Extract abstract\n    let abstract = '';\n    if (articleData.Abstract && articleData.Abstract[0].AbstractText) {\n      abstract = articleData.Abstract[0].AbstractText\n        .map(at => typeof at === 'string' ? at : at._)\n        .join(' ');\n    }\n    const abstractWords = abstract.split(/\\s+/).length;\n    \n    // Extract authors\n    const authors = articleData.AuthorList ? \n      articleData.AuthorList[0].Author\n        .map(a => {\n          const lastName = a.LastName ? a.LastName[0] : '';\n          const foreName = a.ForeName ? a.ForeName[0] : '';\n          return `${foreName} ${lastName}`.trim();\n        })\n        .filter(a => a)\n        .join(', ') : 'Unknown';\n    \n    // Extract keywords/mesh terms\n    const keywords = [];\n    if (medline.MeshHeadingList) {\n      keywords.push(...medline.MeshHeadingList[0].MeshHeading\n        .map(mh => mh.DescriptorName[0]._));\n    }\n    if (medline.KeywordList) {\n      keywords.push(...medline.KeywordList[0].Keyword\n        .map(k => typeof k === 'string' ? k : k._));\n    }\n    \n    // Calculate quality score\n    let qualityScore = 0.75; // Base score for PubMed papers\n    \n    // Bonus for good abstract length\n    if (abstractWords >= 150 && abstractWords <= 500) {\n      qualityScore += 0.1;\n    }\n    \n    // Bonus for recent publication\n    if (daysOld < 30) {\n      qualityScore += 0.1;\n    } else if (daysOld < 180) {\n      qualityScore += 0.05;\n    }\n    \n    // Bonus for rich metadata\n    if (keywords.length > 5) {\n      qualityScore += 0.05;\n    }\n    \n    // Auto-tagging\n    const tags = [];\n    const titleLower = title.toLowerCase();\n    const abstractLower = abstract.toLowerCase();\n    \n    // Medical specialties\n    if (titleLower.includes('cancer') || titleLower.includes('oncology')) tags.push('oncology');\n    if (titleLower.includes('cardio') || titleLower.includes('heart')) tags.push('cardiology');\n    if (titleLower.includes('neuro') || titleLower.includes('brain')) tags.push('neuroscience');\n    if (titleLower.includes('immuno') || titleLower.includes('vaccine')) tags.push('immunology');\n    \n    // Research type\n    if (titleLower.includes('review') || titleLower.includes('meta-analysis')) tags.push('review');\n    if (titleLower.includes('trial') || titleLower.includes('study')) tags.push('clinical-study');\n    if (titleLower.includes('case report')) tags.push('case-report');\n    \n    // Difficulty\n    if (titleLower.includes('introduction') || titleLower.includes('overview')) {\n      tags.push('beginner-friendly');\n    } else if (abstractLower.includes('novel') || abstractLower.includes('advanced')) {\n      tags.push('advanced');\n    } else {\n      tags.push('intermediate');\n    }\n    \n    // DOI\n    let doi = null;\n    if (pubmedData.ArticleIdList) {\n      const doiArticleId = pubmedData.ArticleIdList[0].ArticleId\n        .find(id => id.$.IdType === 'doi');\n      if (doiArticleId) doi = doiArticleId._;\n    }\n    \n    items.push({\n      sourceId,\n      externalId: `pubmed_${pmid}`,\n      contentType: 'paper',\n      source: 'pubmed',\n      categorySlug,\n      title: title.substring(0, 500),\n      description: abstract.substring(0, 1000),\n      url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,\n      thumbnailUrl: null,\n      author: authors.substring(0, 255),\n      publishedAt: publishedAt.toISOString(),\n      wordCount: abstractWords,\n      language: 'en',\n      metadata: {\n        pmid,\n        doi,\n        journal: articleData.Journal[0].Title ? articleData.Journal[0].Title[0] : null,\n        volume: articleData.Journal[0].JournalIssue[0].Volume ? \n          articleData.Journal[0].JournalIssue[0].Volume[0] : null,\n        meshTerms: keywords.slice(0, 20),\n        publicationType: articleData.PublicationTypeList ? \n          articleData.PublicationTypeList[0].PublicationType.map(pt => pt._) : []\n      },\n      qualityScore: Math.min(qualityScore, 1.0),\n      popularityScore: 0,\n      tags\n    });\n  }\n} catch (error) {\n  console.error('Error parsing PubMed XML:', error.message);\n  throw new Error(`Failed to parse PubMed details: ${error.message}`);\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "parse-pubmed-details",
+      "name": "Parse PubMed Details",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {},
+      "id": "merge-papers",
+      "name": "Merge All Papers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.qualityScore}}",
+              "operation": "largerEqual",
+              "value2": 0.6
+            }
+          ]
+        }
+      },
+      "id": "quality-filter",
+      "name": "Quality Filter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id FROM content WHERE external_id = '{{$json.externalId}}' AND source = '{{$json.source}}' LIMIT 1;"
+      },
+      "id": "check-duplicate",
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2050, 250],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.id}}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "is-new",
+      "name": "Is New Paper?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2250, 250]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id FROM categories WHERE slug = '{{$node['Merge All Papers'].json.categorySlug}}' LIMIT 1;"
+      },
+      "id": "get-category-id",
+      "name": "Get Category ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2450, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO content (\n  external_id, content_type, source, category_id,\n  title, description, url, thumbnail_url, author,\n  published_at, word_count, language, metadata,\n  quality_score, popularity_score\n) VALUES (\n  '{{$node['Merge All Papers'].json.externalId}}',\n  '{{$node['Merge All Papers'].json.contentType}}',\n  '{{$node['Merge All Papers'].json.source}}',\n  '{{$json.id}}',\n  $${{$node['Merge All Papers'].json.title.replace(/'/g, \"''\")}}$$,\n  $${{$node['Merge All Papers'].json.description.replace(/'/g, \"''\")}}$$,\n  '{{$node['Merge All Papers'].json.url}}',\n  {{$node['Merge All Papers'].json.thumbnailUrl ? \"'\" + $node['Merge All Papers'].json.thumbnailUrl + \"'\" : 'NULL'}},\n  $${{$node['Merge All Papers'].json.author.replace(/'/g, \"''\")}}$$,\n  '{{$node['Merge All Papers'].json.publishedAt}}',\n  {{$node['Merge All Papers'].json.wordCount}},\n  '{{$node['Merge All Papers'].json.language}}',\n  '{{JSON.stringify($node['Merge All Papers'].json.metadata).replace(/'/g, \"''\")}}'::jsonb,\n  {{$node['Merge All Papers'].json.qualityScore}},\n  {{$node['Merge All Papers'].json.popularityScore}}\n)\nRETURNING id, title;"
+      },
+      "id": "insert-content",
+      "name": "Insert Paper",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2650, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Add tags to the newly inserted content\nconst contentId = $node['Insert Paper'].json.id;\nconst tags = $node['Merge All Papers'].json.tags || [];\n\nif (tags.length === 0) {\n  return [];\n}\n\nreturn [{\n  json: {\n    contentId,\n    tags\n  }\n}];"
+      },
+      "id": "prepare-tags",
+      "name": "Prepare Tags",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2850, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=WITH tag_ids AS (\n  SELECT id, slug FROM tags WHERE slug = ANY(ARRAY[{{$json.tags.map(t => \"'\" + t + \"'\").join(',')}}])\n)\nINSERT INTO content_tags (content_id, tag_id)\nSELECT '{{$json.contentId}}', id FROM tag_ids\nON CONFLICT (content_id, tag_id) DO NOTHING\nRETURNING *;"
+      },
+      "id": "insert-tags",
+      "name": "Insert Tags",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3050, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE content_sources SET last_fetch_at = NOW() WHERE id = '{{$node['Fetch Active Sources'].json.id}}';"
+      },
+      "id": "update-timestamp",
+      "name": "Update Source Timestamp",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3250, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Format execution summary\nconst totalPapers = $('Merge All Papers').all().length;\nconst qualityFiltered = $('Quality Filter', 0).all().length;\nconst duplicates = totalPapers - qualityFiltered;\nconst newPapers = $('Insert Paper').all().length;\n\nconst sources = $('Fetch Active Sources').all();\nconst arxivSources = sources.filter(s => s.json.source_url.includes('arxiv')).length;\nconst pubmedSources = sources.filter(s => !s.json.source_url.includes('arxiv')).length;\n\nreturn [{\n  json: {\n    workflow: 'Research Paper Aggregator - Advanced',\n    executedAt: new Date().toISOString(),\n    stats: {\n      sourcesProcessed: sources.length,\n      arxivSources,\n      pubmedSources,\n      totalPapersFetched: totalPapers,\n      qualityFiltered,\n      duplicates,\n      newPapersInserted: newPapers\n    },\n    success: true\n  }\n}];"
+      },
+      "id": "format-summary",
+      "name": "Format Summary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [3450, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, summary)\nVALUES (\n  '{{$json.workflow}}',\n  '{{$json.executedAt}}',\n  'success',\n  '{{JSON.stringify($json.stats).replace(/'/g, \"''\")}}'::jsonb\n);"
+      },
+      "id": "log-execution",
+      "name": "Log Execution",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3650, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Error in Research Paper Aggregator: {{$json.message}}"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [2050, 500]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, error_message)\nVALUES (\n  'Research Paper Aggregator - Advanced',\n  NOW(),\n  'failed',\n  $${{$json.message.replace(/'/g, \"''\")}}$$\n);"
+      },
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2250, 500],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Sources": {
+      "main": [
+        [
+          {
+            "node": "Check Source Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Source Type": {
+      "main": [
+        [
+          {
+            "node": "Fetch arXiv Papers",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch PubMed Papers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch arXiv Papers": {
+      "main": [
+        [
+          {
+            "node": "Parse arXiv Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PubMed Papers": {
+      "main": [
+        [
+          {
+            "node": "Parse PubMed IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse arXiv Response": {
+      "main": [
+        [
+          {
+            "node": "Merge All Papers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse PubMed IDs": {
+      "main": [
+        [
+          {
+            "node": "Fetch PubMed Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PubMed Details": {
+      "main": [
+        [
+          {
+            "node": "Parse PubMed Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse PubMed Details": {
+      "main": [
+        [
+          {
+            "node": "Merge All Papers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Papers": {
+      "main": [
+        [
+          {
+            "node": "Quality Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Filter": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Is New Paper?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Paper?": {
+      "main": [
+        [
+          {
+            "node": "Get Category ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Category ID": {
+      "main": [
+        [
+          {
+            "node": "Insert Paper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Paper": {
+      "main": [
+        [
+          {
+            "node": "Prepare Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Tags": {
+      "main": [
+        [
+          {
+            "node": "Insert Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Tags": {
+      "main": [
+        [
+          {
+            "node": "Update Source Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Source Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Format Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "executionTimeout": 3600
+  },
+  "meta": {
+    "instanceId": "n8n-instance-1"
+  },
+  "tags": [
+    {
+      "name": "content-aggregation"
+    },
+    {
+      "name": "research-papers"
+    }
+  ]
+}

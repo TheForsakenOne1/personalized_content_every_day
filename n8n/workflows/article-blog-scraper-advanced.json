@@ -1,0 +1,588 @@
+{
+  "name": "Article/Blog Scraper - Advanced",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "notes": "Runs every 6 hours"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT cs.id, cs.name, cs.source_type, cs.source_url, cs.config, c.slug as category_slug\nFROM content_sources cs\nJOIN categories c ON cs.category_id = c.id\nWHERE cs.source_type IN ('rss_feed', 'web_scraper', 'api')\nAND cs.source_type != 'arxiv'\nAND cs.is_active = TRUE\nAND (cs.last_fetch_at IS NULL OR cs.last_fetch_at < NOW() - INTERVAL '6 hours')\nORDER BY cs.last_fetch_at NULLS FIRST\nLIMIT 20;"
+      },
+      "id": "fetch-sources",
+      "name": "Fetch Active Sources",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.source_type}}",
+              "value2": "rss_feed"
+            }
+          ]
+        }
+      },
+      "id": "check-source-type",
+      "name": "Check Source Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.source_url}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-rss",
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.source_url}}",
+        "options": {
+          "timeout": 30000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          }
+        }
+      },
+      "id": "fetch-webpage",
+      "name": "Fetch Webpage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process RSS feed items\nconst cheerio = require('cheerio');\nconst items = [];\nconst sourceId = $node['Fetch Active Sources'].json.id;\nconst categorySlug = $node['Fetch Active Sources'].json.category_slug;\nconst config = $node['Fetch Active Sources'].json.config || {};\nconst keywords = config.keywords || [];\n\n// Get items from last 24 hours\nconst oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);\n\nfor (const item of $input.all()) {\n  const data = item.json;\n  \n  // Parse publication date\n  const pubDate = data.pubDate ? new Date(data.pubDate) : new Date();\n  \n  // Skip if older than 24 hours\n  if (pubDate.getTime() < oneDayAgo) {\n    continue;\n  }\n  \n  // Filter by keywords if specified\n  if (keywords.length > 0) {\n    const titleLower = (data.title || '').toLowerCase();\n    const descLower = (data.description || '').toLowerCase();\n    const hasKeyword = keywords.some(kw => \n      titleLower.includes(kw.toLowerCase()) || \n      descLower.includes(kw.toLowerCase())\n    );\n    if (!hasKeyword) {\n      continue;\n    }\n  }\n  \n  // Extract text from HTML description\n  let cleanDescription = data.description || '';\n  if (cleanDescription.includes('<')) {\n    const $ = cheerio.load(cleanDescription);\n    cleanDescription = $.text().trim();\n  }\n  \n  // Estimate word count and reading time\n  const wordCount = cleanDescription.split(/\\s+/).length;\n  const readingTime = Math.ceil(wordCount / 200); // 200 words per minute\n  \n  // Extract author\n  let author = data.creator || data.author || 'Unknown';\n  if (Array.isArray(author)) {\n    author = author.join(', ');\n  }\n  \n  // Get thumbnail\n  let thumbnailUrl = null;\n  if (data['media:thumbnail']) {\n    thumbnailUrl = data['media:thumbnail'].$.url;\n  } else if (data.enclosure && data.enclosure.$.type?.startsWith('image')) {\n    thumbnailUrl = data.enclosure.$.url;\n  } else if (data['media:content']) {\n    const mediaContent = Array.isArray(data['media:content']) ? \n      data['media:content'][0] : data['media:content'];\n    if (mediaContent.$.type?.startsWith('image')) {\n      thumbnailUrl = mediaContent.$.url;\n    }\n  }\n  \n  // Calculate quality score\n  let qualityScore = 0.6; // Base score\n  \n  // Bonus for good word count (500-2000 words)\n  if (wordCount >= 500 && wordCount <= 2000) {\n    qualityScore += 0.2;\n  } else if (wordCount >= 300 && wordCount < 500) {\n    qualityScore += 0.1;\n  }\n  \n  // Bonus for known author\n  if (author && author !== 'Unknown') {\n    qualityScore += 0.1;\n  }\n  \n  // Bonus for having thumbnail\n  if (thumbnailUrl) {\n    qualityScore += 0.05;\n  }\n  \n  // Bonus for having categories\n  if (data.categories && data.categories.length > 0) {\n    qualityScore += 0.05;\n  }\n  \n  // Auto-tagging\n  const tags = [];\n  const titleLower = (data.title || '').toLowerCase();\n  const descLower = cleanDescription.toLowerCase();\n  \n  // Content type detection\n  if (titleLower.includes('tutorial') || titleLower.includes('how to')) tags.push('tutorial');\n  if (titleLower.includes('guide')) tags.push('guide');\n  if (titleLower.includes('review')) tags.push('review');\n  if (titleLower.includes('opinion') || titleLower.includes('commentary')) tags.push('opinion');\n  if (titleLower.includes('interview')) tags.push('interview');\n  if (titleLower.includes('news')) tags.push('news');\n  \n  // Topic detection\n  if (descLower.includes('ai ') || descLower.includes('artificial intelligence')) tags.push('artificial-intelligence');\n  if (descLower.includes('machine learning') || descLower.includes('ml')) tags.push('machine-learning');\n  if (descLower.includes('web development') || descLower.includes('frontend')) tags.push('web-development');\n  if (descLower.includes('python')) tags.push('python');\n  if (descLower.includes('javascript')) tags.push('javascript');\n  if (descLower.includes('data science') || descLower.includes('data analysis')) tags.push('data-science');\n  if (descLower.includes('cloud') || descLower.includes('aws') || descLower.includes('azure')) tags.push('cloud-computing');\n  if (descLower.includes('security') || descLower.includes('cybersecurity')) tags.push('security');\n  \n  // Difficulty level\n  if (titleLower.includes('beginner') || titleLower.includes('introduction') || titleLower.includes('basics')) {\n    tags.push('beginner-friendly');\n  } else if (titleLower.includes('advanced') || titleLower.includes('expert')) {\n    tags.push('advanced');\n  } else {\n    tags.push('intermediate');\n  }\n  \n  // Reading time tag\n  if (readingTime <= 5) {\n    tags.push('quick-read');\n  } else if (readingTime > 15) {\n    tags.push('long-read');\n  }\n  \n  items.push({\n    sourceId,\n    externalId: null,\n    contentType: 'article',\n    source: 'rss',\n    categorySlug,\n    title: (data.title || 'Untitled').substring(0, 500),\n    description: cleanDescription.substring(0, 1000),\n    url: data.link,\n    thumbnailUrl,\n    author: author.substring(0, 255),\n    publishedAt: pubDate.toISOString(),\n    wordCount,\n    language: 'en',\n    metadata: {\n      feedTitle: data['rss:title'] || null,\n      categories: data.categories || [],\n      readingTime,\n      hasVideo: data.enclosure?.$.type?.startsWith('video') || false,\n      commentsUrl: data.comments || null\n    },\n    qualityScore: Math.min(qualityScore, 1.0),\n    popularityScore: 0,\n    tags: [...new Set(tags)] // Remove duplicates\n  });\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "parse-rss",
+      "name": "Parse RSS Items",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse webpage and extract articles\nconst cheerio = require('cheerio');\nconst items = [];\nconst sourceId = $node['Fetch Active Sources'].json.id;\nconst categorySlug = $node['Fetch Active Sources'].json.category_slug;\nconst config = $node['Fetch Active Sources'].json.config || {};\n\ntry {\n  const html = $input.item.json.body;\n  const $ = cheerio.load(html);\n  \n  // Common article selectors\n  const selectors = config.articleSelector ? [config.articleSelector] : [\n    'article',\n    '.post',\n    '.article',\n    '.entry',\n    '[itemtype*=\"Article\"]',\n    'main article',\n    '.blog-post'\n  ];\n  \n  let articles = null;\n  for (const selector of selectors) {\n    articles = $(selector);\n    if (articles.length > 0) break;\n  }\n  \n  if (!articles || articles.length === 0) {\n    // If no articles found, treat the whole page as one article\n    articles = $('body');\n  }\n  \n  articles.slice(0, 10).each((i, article) => {\n    const $article = $(article);\n    \n    // Extract title\n    const titleSelectors = ['h1', 'h2', '.title', '.entry-title', '[itemprop=\"headline\"]'];\n    let title = '';\n    for (const sel of titleSelectors) {\n      title = $article.find(sel).first().text().trim();\n      if (title) break;\n    }\n    if (!title) title = 'Untitled';\n    \n    // Extract content/description\n    const contentSelectors = ['.content', '.entry-content', '[itemprop=\"articleBody\"]', 'p'];\n    let content = '';\n    for (const sel of contentSelectors) {\n      const elements = $article.find(sel);\n      if (elements.length > 0) {\n        content = elements.text().trim();\n        break;\n      }\n    }\n    \n    // Extract URL\n    let url = $article.find('a[href]').first().attr('href');\n    if (url && !url.startsWith('http')) {\n      const baseUrl = $node['Fetch Active Sources'].json.source_url;\n      const urlObj = new URL(baseUrl);\n      url = new URL(url, urlObj.origin).href;\n    }\n    if (!url) url = $node['Fetch Active Sources'].json.source_url;\n    \n    // Extract thumbnail\n    let thumbnailUrl = null;\n    const img = $article.find('img').first();\n    if (img.length > 0) {\n      thumbnailUrl = img.attr('src') || img.attr('data-src');\n      if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {\n        const baseUrl = $node['Fetch Active Sources'].json.source_url;\n        const urlObj = new URL(baseUrl);\n        thumbnailUrl = new URL(thumbnailUrl, urlObj.origin).href;\n      }\n    }\n    \n    // Extract author\n    const authorSelectors = ['.author', '.by-author', '[itemprop=\"author\"]', '[rel=\"author\"]'];\n    let author = 'Unknown';\n    for (const sel of authorSelectors) {\n      author = $article.find(sel).first().text().trim();\n      if (author) break;\n    }\n    \n    // Extract date\n    const dateSelectors = ['time', '.date', '.published', '[itemprop=\"datePublished\"]'];\n    let publishedAt = new Date();\n    for (const sel of dateSelectors) {\n      const dateElem = $article.find(sel).first();\n      const dateStr = dateElem.attr('datetime') || dateElem.text();\n      if (dateStr) {\n        const parsed = new Date(dateStr);\n        if (!isNaN(parsed.getTime())) {\n          publishedAt = parsed;\n          break;\n        }\n      }\n    }\n    \n    // Calculate metrics\n    const wordCount = content.split(/\\s+/).length;\n    const readingTime = Math.ceil(wordCount / 200);\n    \n    // Skip if content is too short\n    if (wordCount < 100) return;\n    \n    // Calculate quality score\n    let qualityScore = 0.5; // Base score\n    \n    if (wordCount >= 500 && wordCount <= 2000) {\n      qualityScore += 0.25;\n    } else if (wordCount >= 300) {\n      qualityScore += 0.15;\n    }\n    \n    if (author && author !== 'Unknown') qualityScore += 0.1;\n    if (thumbnailUrl) qualityScore += 0.05;\n    if (title.length > 10 && title.length < 100) qualityScore += 0.1;\n    \n    // Auto-tagging\n    const tags = ['web-article'];\n    const titleLower = title.toLowerCase();\n    const contentLower = content.toLowerCase();\n    \n    if (titleLower.includes('tutorial') || titleLower.includes('how to')) tags.push('tutorial');\n    if (titleLower.includes('guide')) tags.push('guide');\n    if (readingTime <= 5) tags.push('quick-read');\n    if (readingTime > 15) tags.push('long-read');\n    \n    // Topic detection\n    if (contentLower.includes('programming') || contentLower.includes('coding')) tags.push('programming');\n    if (contentLower.includes('design')) tags.push('design');\n    if (contentLower.includes('business')) tags.push('business');\n    \n    items.push({\n      sourceId,\n      externalId: null,\n      contentType: 'article',\n      source: 'web_scraper',\n      categorySlug,\n      title: title.substring(0, 500),\n      description: content.substring(0, 1000),\n      url,\n      thumbnailUrl,\n      author: author.substring(0, 255),\n      publishedAt: publishedAt.toISOString(),\n      wordCount,\n      language: 'en',\n      metadata: {\n        scrapedFrom: $node['Fetch Active Sources'].json.source_url,\n        readingTime\n      },\n      qualityScore: Math.min(qualityScore, 1.0),\n      popularityScore: 0,\n      tags\n    });\n  });\n  \n} catch (error) {\n  console.error('Error parsing webpage:', error.message);\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "parse-webpage",
+      "name": "Parse Webpage",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {},
+      "id": "merge-articles",
+      "name": "Merge All Articles",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.qualityScore}}",
+              "operation": "largerEqual",
+              "value2": 0.5
+            }
+          ]
+        }
+      },
+      "id": "quality-filter",
+      "name": "Quality Filter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id FROM content WHERE url = '{{$json.url}}' LIMIT 1;"
+      },
+      "id": "check-duplicate",
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1650, 250],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.id}}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "is-new",
+      "name": "Is New Article?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1850, 250]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$node['Merge All Articles'].json.url}}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "extract-full-content",
+      "name": "Extract Full Content (Optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2050, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Try to extract better content from full page\nconst cheerio = require('cheerio');\nlet article = $node['Merge All Articles'].json;\n\ntry {\n  const response = $input.item.json;\n  \n  if (response.statusCode === 200 && response.body) {\n    const $ = cheerio.load(response.body);\n    \n    // Remove unwanted elements\n    $('script, style, nav, footer, header, .ad, .advertisement').remove();\n    \n    // Try to find main content\n    const contentSelectors = [\n      'article',\n      '[role=\"main\"]',\n      'main',\n      '.article-content',\n      '.post-content',\n      '#content'\n    ];\n    \n    let content = '';\n    for (const selector of contentSelectors) {\n      const elem = $(selector);\n      if (elem.length > 0) {\n        content = elem.text().trim();\n        if (content.length > article.wordCount * 5) { // Significant content found\n          break;\n        }\n      }\n    }\n    \n    if (content && content.length > article.description.length) {\n      const wordCount = content.split(/\\s+/).length;\n      \n      // Update article with better content\n      article.description = content.substring(0, 1000);\n      article.wordCount = wordCount;\n      article.metadata.fullTextExtracted = true;\n      article.metadata.readingTime = Math.ceil(wordCount / 200);\n      \n      // Adjust quality score\n      if (wordCount >= 500 && wordCount <= 2000) {\n        article.qualityScore = Math.min(article.qualityScore + 0.1, 1.0);\n      }\n    }\n  }\n} catch (error) {\n  console.log('Could not extract full content:', error.message);\n  // Continue with original article data\n}\n\nreturn [{ json: article }];"
+      },
+      "id": "enhance-content",
+      "name": "Enhance Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2250, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id FROM categories WHERE slug = '{{$json.categorySlug}}' LIMIT 1;"
+      },
+      "id": "get-category-id",
+      "name": "Get Category ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2450, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO content (\n  external_id, content_type, source, category_id,\n  title, description, url, thumbnail_url, author,\n  published_at, word_count, language, metadata,\n  quality_score, popularity_score\n) VALUES (\n  {{$node['Enhance Content'].json.externalId ? \"'\" + $node['Enhance Content'].json.externalId + \"'\" : 'NULL'}},\n  '{{$node['Enhance Content'].json.contentType}}',\n  '{{$node['Enhance Content'].json.source}}',\n  '{{$json.id}}',\n  $${{$node['Enhance Content'].json.title.replace(/'/g, \"''\")}}$$,\n  $${{$node['Enhance Content'].json.description.replace(/'/g, \"''\")}}$$,\n  '{{$node['Enhance Content'].json.url}}',\n  {{$node['Enhance Content'].json.thumbnailUrl ? \"'\" + $node['Enhance Content'].json.thumbnailUrl + \"'\" : 'NULL'}},\n  $${{$node['Enhance Content'].json.author.replace(/'/g, \"''\")}}$$,\n  '{{$node['Enhance Content'].json.publishedAt}}',\n  {{$node['Enhance Content'].json.wordCount}},\n  '{{$node['Enhance Content'].json.language}}',\n  '{{JSON.stringify($node['Enhance Content'].json.metadata).replace(/'/g, \"''\")}}'::jsonb,\n  {{$node['Enhance Content'].json.qualityScore}},\n  {{$node['Enhance Content'].json.popularityScore}}\n)\nRETURNING id, title;"
+      },
+      "id": "insert-content",
+      "name": "Insert Article",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2650, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Add tags to the newly inserted content\nconst contentId = $node['Insert Article'].json.id;\nconst tags = $node['Enhance Content'].json.tags || [];\n\nif (tags.length === 0) {\n  return [];\n}\n\nreturn [{\n  json: {\n    contentId,\n    tags\n  }\n}];"
+      },
+      "id": "prepare-tags",
+      "name": "Prepare Tags",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2850, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=WITH tag_ids AS (\n  SELECT id, slug FROM tags WHERE slug = ANY(ARRAY[{{$json.tags.map(t => \"'\" + t + \"'\").join(',')}}])\n)\nINSERT INTO content_tags (content_id, tag_id)\nSELECT '{{$json.contentId}}', id FROM tag_ids\nON CONFLICT (content_id, tag_id) DO NOTHING\nRETURNING *;"
+      },
+      "id": "insert-tags",
+      "name": "Insert Tags",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3050, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE content_sources SET last_fetch_at = NOW() WHERE id = '{{$node['Fetch Active Sources'].json.id}}';"
+      },
+      "id": "update-timestamp",
+      "name": "Update Source Timestamp",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3250, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Format execution summary\nconst totalArticles = $('Merge All Articles').all().length;\nconst qualityFiltered = $('Quality Filter', 0).all().length;\nconst duplicates = totalArticles - qualityFiltered;\nconst newArticles = $('Insert Article').all().length;\n\nconst sources = $('Fetch Active Sources').all();\nconst rssSources = sources.filter(s => s.json.source_type === 'rss_feed').length;\nconst webScrapers = sources.filter(s => s.json.source_type === 'web_scraper').length;\n\nreturn [{\n  json: {\n    workflow: 'Article/Blog Scraper - Advanced',\n    executedAt: new Date().toISOString(),\n    stats: {\n      sourcesProcessed: sources.length,\n      rssSources,\n      webScrapers,\n      totalArticlesFetched: totalArticles,\n      qualityFiltered,\n      duplicates,\n      newArticlesInserted: newArticles\n    },\n    success: true\n  }\n}];"
+      },
+      "id": "format-summary",
+      "name": "Format Summary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [3450, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, summary)\nVALUES (\n  '{{$json.workflow}}',\n  '{{$json.executedAt}}',\n  'success',\n  '{{JSON.stringify($json.stats).replace(/'/g, \"''\")}}'::jsonb\n);"
+      },
+      "id": "log-execution",
+      "name": "Log Execution",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [3650, 200],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Error in Article/Blog Scraper: {{$json.message}}"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [2050, 500]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO workflow_executions (workflow_name, executed_at, status, error_message)\nVALUES (\n  'Article/Blog Scraper - Advanced',\n  NOW(),\n  'failed',\n  $${{$json.message.replace(/'/g, \"''\")}}$$\n);"
+      },
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [2250, 500],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Sources": {
+      "main": [
+        [
+          {
+            "node": "Check Source Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Source Type": {
+      "main": [
+        [
+          {
+            "node": "Fetch RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Webpage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "Parse RSS Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Webpage": {
+      "main": [
+        [
+          {
+            "node": "Parse Webpage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse RSS Items": {
+      "main": [
+        [
+          {
+            "node": "Merge All Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Webpage": {
+      "main": [
+        [
+          {
+            "node": "Merge All Articles",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Articles": {
+      "main": [
+        [
+          {
+            "node": "Quality Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Filter": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Is New Article?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Article?": {
+      "main": [
+        [
+          {
+            "node": "Extract Full Content (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Full Content (Optional)": {
+      "main": [
+        [
+          {
+            "node": "Enhance Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Content": {
+      "main": [
+        [
+          {
+            "node": "Get Category ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Category ID": {
+      "main": [
+        [
+          {
+            "node": "Insert Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Article": {
+      "main": [
+        [
+          {
+            "node": "Prepare Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Tags": {
+      "main": [
+        [
+          {
+            "node": "Insert Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Tags": {
+      "main": [
+        [
+          {
+            "node": "Update Source Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Source Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Format Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "executionTimeout": 3600
+  },
+  "meta": {
+    "instanceId": "n8n-instance-1"
+  },
+  "tags": [
+    {
+      "name": "content-aggregation"
+    },
+    {
+      "name": "articles"
+    },
+    {
+      "name": "blogs"
+    }
+  ]
+}
