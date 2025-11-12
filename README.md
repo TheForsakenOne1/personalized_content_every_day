@@ -94,12 +94,16 @@ npm run dev
 ## Documentation
 
 - [Architecture Documentation](./ARCHITECTURE.md)
-- API Documentation: Available at `/api/docs` when running backend
+- [Database Schema](./docs/DATABASE_SCHEMA.md)
+- [API Documentation](./docs/API_DOCUMENTATION.md)
+- [Setup Guide](./docs/SETUP.md)
+- [Phase 1 Summary](./docs/PHASE1_SUMMARY.md)
+- [n8n Workflows](./n8n/README.md)
 
 ## Development Roadmap
 
-- [x] Phase 1: Foundation (Weeks 1-4)
-- [ ] Phase 2: Content Aggregation (Weeks 5-8)
+- [x] Phase 1: Foundation (Weeks 1-4) ✅
+- [x] Phase 2: Content Aggregation (Weeks 5-8) ✅
 - [ ] Phase 3: Personalization (Weeks 9-12)
 - [ ] Phase 4: Interactions & Tracking (Weeks 13-15)
 - [ ] Phase 5: Polish & Launch (Weeks 16-18)

@@ -1,0 +1,251 @@
+{
+  "name": "YouTube Content Aggregator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Daily 6 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, source_url, config FROM content_sources WHERE source_type IN ('youtube_channel', 'youtube_search') AND is_active = true",
+        "additionalFields": {}
+      },
+      "name": "Get Active YouTube Sources",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "resource": "video",
+        "q": "={{$json[\"config\"][\"keywords\"] || $json[\"config\"][\"search_query\"]}}",
+        "channelId": "={{$json[\"config\"][\"channel_id\"]}}",
+        "maxResults": 10,
+        "order": "date",
+        "publishedAfter": "={{$now.minus({days: 1}).toISO()}}",
+        "additionalFields": {}
+      },
+      "name": "YouTube Search",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "credentials": {
+        "youTubeApi": {
+          "id": "2",
+          "name": "YouTube API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "resource": "video",
+        "videoId": "={{$json[\"id\"][\"videoId\"]}}",
+        "part": ["snippet", "contentDetails", "statistics"],
+        "additionalFields": {}
+      },
+      "name": "Get Video Details",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [910, 300],
+      "credentials": {
+        "youTubeApi": {
+          "id": "2",
+          "name": "YouTube API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM content WHERE external_id = '{{$json[\"id\"]}}' AND source = 'youtube'",
+        "additionalFields": {}
+      },
+      "name": "Check If Exists",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1130, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json[\"length\"]}}",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "If Not Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const videoData = items[0].json;\nconst snippet = videoData.snippet;\nconst contentDetails = videoData.contentDetails;\nconst statistics = videoData.statistics;\n\n// Parse ISO 8601 duration\nconst duration = contentDetails.duration;\nconst match = duration.match(/PT(\\d+H)?(\\d+M)?(\\d+S)?/);\nconst hours = parseInt(match[1]) || 0;\nconst minutes = parseInt(match[2]) || 0;\nconst seconds = parseInt(match[3]) || 0;\nconst totalSeconds = hours * 3600 + minutes * 60 + seconds;\n\n// Calculate quality score based on engagement\nconst views = parseInt(statistics.viewCount) || 0;\nconst likes = parseInt(statistics.likeCount) || 0;\nconst comments = parseInt(statistics.commentCount) || 0;\n\nlet qualityScore = 0.5;\nif (views > 0) {\n  const engagementRate = (likes + comments) / views;\n  qualityScore = Math.min(0.3 + (engagementRate * 100), 1.0);\n}\n\nconst metadata = {\n  video_id: videoData.id,\n  channel_id: snippet.channelId,\n  channel_name: snippet.channelTitle,\n  view_count: views,\n  like_count: likes,\n  comment_count: comments,\n  tags: snippet.tags || [],\n  category_id: snippet.categoryId,\n  default_language: snippet.defaultLanguage || 'en'\n};\n\nreturn {\n  json: {\n    external_id: videoData.id,\n    content_type: 'video',\n    source: 'youtube',\n    title: snippet.title,\n    description: snippet.description,\n    url: `https://www.youtube.com/watch?v=${videoData.id}`,\n    thumbnail_url: snippet.thumbnails.high?.url || snippet.thumbnails.default?.url,\n    author: snippet.channelTitle,\n    published_at: snippet.publishedAt,\n    duration: totalSeconds,\n    quality_score: qualityScore.toFixed(2),\n    popularity_score: views,\n    metadata: metadata\n  }\n};"
+      },
+      "name": "Transform Video Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1570, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BACKEND_API_URL}}/api/content",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "external_id",
+              "value": "={{$json[\"external_id\"]}}"
+            },
+            {
+              "name": "content_type",
+              "value": "={{$json[\"content_type\"]}}"
+            },
+            {
+              "name": "source",
+              "value": "={{$json[\"source\"]}}"
+            },
+            {
+              "name": "category_id",
+              "value": "={{$json[\"category_id\"]}}"
+            },
+            {
+              "name": "title",
+              "value": "={{$json[\"title\"]}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$json[\"description\"]}}"
+            },
+            {
+              "name": "url",
+              "value": "={{$json[\"url\"]}}"
+            },
+            {
+              "name": "thumbnail_url",
+              "value": "={{$json[\"thumbnail_url\"]}}"
+            },
+            {
+              "name": "author",
+              "value": "={{$json[\"author\"]}}"
+            },
+            {
+              "name": "published_at",
+              "value": "={{$json[\"published_at\"]}}"
+            },
+            {
+              "name": "duration",
+              "value": "={{$json[\"duration\"]}}"
+            },
+            {
+              "name": "quality_score",
+              "value": "={{$json[\"quality_score\"]}}"
+            },
+            {
+              "name": "popularity_score",
+              "value": "={{$json[\"popularity_score\"]}}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{$json[\"metadata\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Insert to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1790, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Backend API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "result",
+              "value": "={{$json[\"success\"] ? 'Added: ' + $json[\"data\"][\"content\"][\"title\"] : 'Failed'}}"
+            }
+          ]
+        }
+      },
+      "name": "Format Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2010, 200]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 6 AM": {
+      "main": [[{"node": "Get Active YouTube Sources", "type": "main", "index": 0}]]
+    },
+    "Get Active YouTube Sources": {
+      "main": [[{"node": "YouTube Search", "type": "main", "index": 0}]]
+    },
+    "YouTube Search": {
+      "main": [[{"node": "Get Video Details", "type": "main", "index": 0}]]
+    },
+    "Get Video Details": {
+      "main": [[{"node": "Check If Exists", "type": "main", "index": 0}]]
+    },
+    "Check If Exists": {
+      "main": [[{"node": "If Not Exists", "type": "main", "index": 0}]]
+    },
+    "If Not Exists": {
+      "main": [[{"node": "Transform Video Data", "type": "main", "index": 0}]]
+    },
+    "Transform Video Data": {
+      "main": [[{"node": "Insert to Database", "type": "main", "index": 0}]]
+    },
+    "Insert to Database": {
+      "main": [[{"node": "Format Result", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["content", "youtube", "aggregation"],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

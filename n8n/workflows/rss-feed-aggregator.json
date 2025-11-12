@@ -1,0 +1,201 @@
+{
+  "name": "RSS Feed Aggregator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "name": "Schedule Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, category_id, source_url, config FROM content_sources WHERE source_type = 'rss_feed' AND is_active = true",
+        "additionalFields": {}
+      },
+      "name": "Get RSS Feed Sources",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"source_url\"]}}",
+        "options": {}
+      },
+      "name": "Read RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const item = items[0].json;\nconst publishedDate = new Date(item.isoDate || item.pubDate);\nconst oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);\n\n// Only process items from last 24 hours\nif (publishedDate < oneDayAgo) {\n  return [];\n}\n\n// Estimate word count from content or contentSnippet\nconst content = item['content:encoded'] || item.content || item.contentSnippet || '';\nconst wordCount = content.split(/\\s+/).length;\n\n// Determine content type based on characteristics\nlet contentType = 'article';\nif (item.categories?.some(c => c.toLowerCase().includes('blog'))) {\n  contentType = 'blog';\n}\n\n// Extract clean text description\nconst description = (item.contentSnippet || item.description || '')\n  .replace(/<[^>]*>/g, '')\n  .substring(0, 500);\n\nreturn [{\n  json: {\n    title: item.title,\n    description: description,\n    url: item.link,\n    author: item.creator || item['dc:creator'] || 'Unknown',\n    published_at: publishedDate.toISOString(),\n    content_type: contentType,\n    word_count: Math.min(wordCount, 10000),\n    thumbnail_url: item.enclosure?.url || item['media:thumbnail']?.$?.url || null,\n    categories: item.categories || [],\n    feed_url: $json[\"source_url\"]\n  }\n}];"
+      },
+      "name": "Filter & Transform",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM content WHERE url = '{{$json[\"url\"]}}'",
+        "additionalFields": {}
+      },
+      "name": "Check If Exists",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1130, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json[\"length\"]}}",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "If Not Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const article = items[0].json;\n\n// Calculate quality score\nlet qualityScore = 0.6; // Base score\n\n// Adjust based on word count (prefer 500-2000 words)\nif (article.word_count >= 500 && article.word_count <= 2000) {\n  qualityScore += 0.2;\n} else if (article.word_count > 2000) {\n  qualityScore += 0.1;\n}\n\n// Has author\nif (article.author && article.author !== 'Unknown') {\n  qualityScore += 0.1;\n}\n\n// Has thumbnail\nif (article.thumbnail_url) {\n  qualityScore += 0.05;\n}\n\n// Has categories\nif (article.categories.length > 0) {\n  qualityScore += 0.05;\n}\n\nqualityScore = Math.min(qualityScore, 1.0);\n\nconst metadata = {\n  feed_url: article.feed_url,\n  categories: article.categories,\n  original_url: article.url,\n  estimated_read_time: Math.ceil(article.word_count / 200) // 200 wpm\n};\n\nreturn {\n  json: {\n    external_id: null,\n    content_type: article.content_type,\n    source: 'rss',\n    title: article.title,\n    description: article.description,\n    url: article.url,\n    thumbnail_url: article.thumbnail_url,\n    author: article.author,\n    published_at: article.published_at,\n    word_count: article.word_count,\n    quality_score: qualityScore.toFixed(2),\n    popularity_score: 0,\n    metadata: metadata\n  }\n};"
+      },
+      "name": "Prepare for Insert",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1570, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BACKEND_API_URL}}/api/content",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_type",
+              "value": "={{$json[\"content_type\"]}}"
+            },
+            {
+              "name": "source",
+              "value": "={{$json[\"source\"]}}"
+            },
+            {
+              "name": "category_id",
+              "value": "={{$json[\"category_id\"]}}"
+            },
+            {
+              "name": "title",
+              "value": "={{$json[\"title\"]}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$json[\"description\"]}}"
+            },
+            {
+              "name": "url",
+              "value": "={{$json[\"url\"]}}"
+            },
+            {
+              "name": "thumbnail_url",
+              "value": "={{$json[\"thumbnail_url\"]}}"
+            },
+            {
+              "name": "author",
+              "value": "={{$json[\"author\"]}}"
+            },
+            {
+              "name": "published_at",
+              "value": "={{$json[\"published_at\"]}}"
+            },
+            {
+              "name": "word_count",
+              "value": "={{$json[\"word_count\"]}}"
+            },
+            {
+              "name": "quality_score",
+              "value": "={{$json[\"quality_score\"]}}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{$json[\"metadata\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Insert to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1790, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Backend API Auth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Every 6 Hours": {
+      "main": [[{"node": "Get RSS Feed Sources", "type": "main", "index": 0}]]
+    },
+    "Get RSS Feed Sources": {
+      "main": [[{"node": "Read RSS Feed", "type": "main", "index": 0}]]
+    },
+    "Read RSS Feed": {
+      "main": [[{"node": "Filter & Transform", "type": "main", "index": 0}]]
+    },
+    "Filter & Transform": {
+      "main": [[{"node": "Check If Exists", "type": "main", "index": 0}]]
+    },
+    "Check If Exists": {
+      "main": [[{"node": "If Not Exists", "type": "main", "index": 0}]]
+    },
+    "If Not Exists": {
+      "main": [[{"node": "Prepare for Insert", "type": "main", "index": 0}]]
+    },
+    "Prepare for Insert": {
+      "main": [[{"node": "Insert to Database", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["content", "rss", "blog", "article", "aggregation"],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T00:00:00.000Z",
+  "versionId": "1"
+}

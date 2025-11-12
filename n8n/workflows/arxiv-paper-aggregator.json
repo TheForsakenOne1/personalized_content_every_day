@@ -1,0 +1,215 @@
+{
+  "name": "arXiv Research Paper Aggregator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Daily 7 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, category_id, config FROM content_sources WHERE source_type = 'api' AND source_url LIKE '%arxiv%' AND is_active = true",
+        "additionalFields": {}
+      },
+      "name": "Get arXiv Sources",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://export.arxiv.org/api/query?search_query={{$json[\"config\"][\"search_query\"]}}&start=0&max_results=10&sortBy=submittedDate&sortOrder=descending",
+        "options": {}
+      },
+      "name": "Fetch arXiv Papers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "options": {}
+      },
+      "name": "Parse XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const entries = items[0].json.feed.entry;\nif (!Array.isArray(entries)) {\n  return [];\n}\n\nreturn entries.map(entry => ({\n  json: {\n    arxiv_id: entry.id[0].split('/').pop(),\n    title: entry.title[0],\n    summary: entry.summary[0],\n    authors: entry.author.map(a => a.name[0]).join(', '),\n    published: entry.published[0],\n    updated: entry.updated[0],\n    pdf_url: entry.link.find(l => l.$.type === 'application/pdf')?.$.href || '',\n    categories: entry.category?.map(c => c.$.term) || [],\n    primary_category: entry['arxiv:primary_category']?.[0]?.$.term || ''\n  }\n}));"
+      },
+      "name": "Extract Papers",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM content WHERE external_id = '{{$json[\"arxiv_id\"]}}' AND source = 'arxiv'",
+        "additionalFields": {}
+      },
+      "name": "Check If Exists",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1350, 300],
+      "credentials": {
+        "postgres": {
+          "id": "1",
+          "name": "PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json[\"length\"]}}",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "If Not Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1570, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const paper = items[0].json;\n\n// Count abstract words\nconst wordCount = paper.summary.split(/\\s+/).length;\n\n// Base quality score on abstract length and recency\nconst daysOld = (Date.now() - new Date(paper.published).getTime()) / (1000 * 60 * 60 * 24);\nlet qualityScore = 0.7; // Base score for research papers\n\nif (wordCount > 150 && wordCount < 500) {\n  qualityScore += 0.1; // Good abstract length\n}\nif (daysOld < 7) {\n  qualityScore += 0.1; // Recent paper\n}\nif (paper.categories.length > 2) {\n  qualityScore += 0.05; // Cross-disciplinary\n}\n\nqualityScore = Math.min(qualityScore, 1.0);\n\nconst metadata = {\n  arxiv_id: paper.arxiv_id,\n  categories: paper.categories,\n  primary_category: paper.primary_category,\n  pdf_url: paper.pdf_url,\n  authors_list: paper.authors.split(', '),\n  updated_at: paper.updated\n};\n\nreturn {\n  json: {\n    external_id: paper.arxiv_id,\n    content_type: 'paper',\n    source: 'arxiv',\n    title: paper.title.replace(/\\s+/g, ' ').trim(),\n    description: paper.summary.replace(/\\s+/g, ' ').trim(),\n    url: `https://arxiv.org/abs/${paper.arxiv_id}`,\n    thumbnail_url: null,\n    author: paper.authors,\n    published_at: paper.published,\n    word_count: wordCount,\n    quality_score: qualityScore.toFixed(2),\n    popularity_score: 0,\n    metadata: metadata\n  }\n};"
+      },
+      "name": "Transform Paper Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1790, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BACKEND_API_URL}}/api/content",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "external_id",
+              "value": "={{$json[\"external_id\"]}}"
+            },
+            {
+              "name": "content_type",
+              "value": "={{$json[\"content_type\"]}}"
+            },
+            {
+              "name": "source",
+              "value": "={{$json[\"source\"]}}"
+            },
+            {
+              "name": "category_id",
+              "value": "={{$json[\"category_id\"]}}"
+            },
+            {
+              "name": "title",
+              "value": "={{$json[\"title\"]}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$json[\"description\"]}}"
+            },
+            {
+              "name": "url",
+              "value": "={{$json[\"url\"]}}"
+            },
+            {
+              "name": "author",
+              "value": "={{$json[\"author\"]}}"
+            },
+            {
+              "name": "published_at",
+              "value": "={{$json[\"published_at\"]}}"
+            },
+            {
+              "name": "word_count",
+              "value": "={{$json[\"word_count\"]}}"
+            },
+            {
+              "name": "quality_score",
+              "value": "={{$json[\"quality_score\"]}}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{$json[\"metadata\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Insert to Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [2010, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3",
+          "name": "Backend API Auth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Daily 7 AM": {
+      "main": [[{"node": "Get arXiv Sources", "type": "main", "index": 0}]]
+    },
+    "Get arXiv Sources": {
+      "main": [[{"node": "Fetch arXiv Papers", "type": "main", "index": 0}]]
+    },
+    "Fetch arXiv Papers": {
+      "main": [[{"node": "Parse XML", "type": "main", "index": 0}]]
+    },
+    "Parse XML": {
+      "main": [[{"node": "Extract Papers", "type": "main", "index": 0}]]
+    },
+    "Extract Papers": {
+      "main": [[{"node": "Check If Exists", "type": "main", "index": 0}]]
+    },
+    "Check If Exists": {
+      "main": [[{"node": "If Not Exists", "type": "main", "index": 0}]]
+    },
+    "If Not Exists": {
+      "main": [[{"node": "Transform Paper Data", "type": "main", "index": 0}]]
+    },
+    "Transform Paper Data": {
+      "main": [[{"node": "Insert to Database", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["content", "arxiv", "research", "aggregation"],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T00:00:00.000Z",
+  "versionId": "1"
+}
