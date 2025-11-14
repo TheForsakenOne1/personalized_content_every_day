@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { DevTools } from "@/components/dev-tools";
 
 export const metadata: Metadata = {
   title: "EduHub - Personalized Learning Platform",
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <DevTools />
+        </Providers>
       </body>
     </html>
   );
