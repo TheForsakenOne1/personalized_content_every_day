@@ -71,6 +71,22 @@ export class AuthService {
       },
     });
 
+    // Auto-subscribe to default categories
+    const defaultCategories = await prisma.category.findMany();
+
+    if (defaultCategories.length > 0) {
+      const categorySubscriptions = defaultCategories.map(category => ({
+        userId: user.id,
+        categoryId: category.id,
+        priority: 5, // Medium priority by default
+        isActive: true,
+      }));
+
+      await prisma.userCategory.createMany({
+        data: categorySubscriptions,
+      });
+    }
+
     // TODO: Send verification email
 
     return user;
