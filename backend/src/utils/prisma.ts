@@ -1,11 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+/**
+ * Database client - using custom SQLite adapter
+ * This replaces Prisma Client since we couldn't generate it due to network restrictions
+ */
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+import { prisma as dbClient } from '../lib/db';
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Export the custom database client
+export const prisma = dbClient;
