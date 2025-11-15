@@ -18,22 +18,20 @@ export function AuthLayout({
   showBackToLogin = false,
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="flex justify-center"
         >
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
-              <GraduationCap className="h-8 w-8 text-white" />
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="bg-primary p-3 rounded-2xl group-hover:scale-105 transition-transform duration-200">
+              <GraduationCap className="h-7 w-7 text-white" />
             </div>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">EduHub</span>
           </Link>
         </motion.div>
 
@@ -41,14 +39,14 @@ export function AuthLayout({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-6 text-center"
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mt-8 text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white">
             {title}
           </h2>
           {subtitle && (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
               {subtitle}
             </p>
           )}
@@ -59,10 +57,10 @@ export function AuthLayout({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative"
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-2xl shadow-blue-500/10 dark:shadow-purple-500/10 sm:rounded-2xl sm:px-10 border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-900 py-10 px-6 border border-gray-200 dark:border-gray-800 sm:rounded-3xl sm:px-12">
           {children}
         </div>
 
@@ -71,12 +69,12 @@ export function AuthLayout({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
             className="mt-6 text-center"
           >
             <Link
               href="/auth/login"
-              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               ← Back to login
             </Link>
@@ -88,12 +86,11 @@ export function AuthLayout({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400"
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="mt-10 text-center text-sm text-gray-500 dark:text-gray-500"
       >
         <p>
-          © {new Date().getFullYear()} Educational Content Aggregator. All
-          rights reserved.
+          © {new Date().getFullYear()} EduHub. All rights reserved.
         </p>
       </motion.div>
     </div>

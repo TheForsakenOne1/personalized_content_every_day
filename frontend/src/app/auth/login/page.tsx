@@ -176,7 +176,7 @@ export default function LoginPage() {
 
           <Link
             href="/auth/forgot-password"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             Forgot password?
           </Link>
@@ -185,12 +185,13 @@ export default function LoginPage() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+          className="w-full"
+          size="lg"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Signing in...
             </>
           ) : (
@@ -199,13 +200,13 @@ export default function LoginPage() {
         </Button>
 
         {/* Divider */}
-        <div className="relative">
+        <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            <div className="w-full border-t border-gray-200 dark:border-gray-800" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-              Or
+            <span className="px-4 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+              or
             </span>
           </div>
         </div>
@@ -216,9 +217,9 @@ export default function LoginPage() {
             Don't have an account?{" "}
             <Link
               href="/auth/register"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              className="font-semibold text-primary hover:text-primary/80 transition-colors"
             >
-              Sign up for free
+              Sign up
             </Link>
           </p>
         </div>

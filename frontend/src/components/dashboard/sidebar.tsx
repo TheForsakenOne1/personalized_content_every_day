@@ -52,14 +52,14 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Quick Actions */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-1">
         <Link
           href="/dashboard"
           className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group",
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
             pathname === "/dashboard"
-              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-              : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
           )}
         >
           <Home className="h-5 w-5" />
@@ -69,15 +69,15 @@ export function Sidebar({ onClose }: SidebarProps) {
         <Link
           href="/dashboard/bookmarks"
           className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group",
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
             pathname === "/dashboard/bookmarks"
-              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-              : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
           )}
         >
           <BookMarked className="h-5 w-5" />
           <span className="font-medium">Saved</span>
-          <span className="ml-auto text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
+          <span className="ml-auto text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-semibold">
             12
           </span>
         </Link>
@@ -85,10 +85,10 @@ export function Sidebar({ onClose }: SidebarProps) {
         <Link
           href="/dashboard/trending"
           className={cn(
-            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group",
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
             pathname === "/dashboard/trending"
-              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-              : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
           )}
         >
           <TrendingUp className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         </Link>
       </div>
 
-      <div className="border-t border-gray-200 dark:border-gray-700" />
+      <div className="border-t border-gray-200 dark:border-gray-800" />
 
       {/* Categories */}
       <div className="flex-1 overflow-y-auto p-4">
@@ -115,10 +115,10 @@ export function Sidebar({ onClose }: SidebarProps) {
                     onClose?.();
                   }}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group",
+                    "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group",
                     activeCategory === category.slug
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
                   )}
                 >
                   <category.icon className="h-5 w-5" />
@@ -127,10 +127,10 @@ export function Sidebar({ onClose }: SidebarProps) {
                   </span>
                   <span
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full",
+                      "text-xs px-2 py-0.5 rounded-full font-medium",
                       activeCategory === category.slug
-                        ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                        ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                     )}
                   >
                     {category.count}
@@ -165,10 +165,10 @@ export function Sidebar({ onClose }: SidebarProps) {
                     key={type.value}
                     onClick={() => setActiveContentType(type.value)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all text-sm",
+                      "w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-200 text-sm",
                       activeContentType === type.value
-                        ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
                     )}
                   >
                     <type.icon className="h-4 w-4" />
@@ -182,29 +182,35 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Bottom Actions */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
+      <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-2">
         <Link
           href="/dashboard/preferences"
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all"
+          className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 transition-all duration-200"
         >
           <Settings className="h-5 w-5" />
           <span className="font-medium text-sm">Topic Preferences</span>
         </Link>
 
         {/* Stats Card */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg p-4 text-white">
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Star className="h-5 w-5" fill="currentColor" />
-            <h4 className="font-semibold">Your Progress</h4>
+            <div className="p-1.5 bg-primary/10 rounded-lg">
+              <Star className="h-4 w-4 text-primary" fill="currentColor" />
+            </div>
+            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+              Your Progress
+            </h4>
           </div>
-          <p className="text-sm text-blue-100 mb-3">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
             You've read 42 articles this week!
           </p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full w-[70%] bg-white rounded-full"></div>
+            <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-full w-[70%] bg-primary rounded-full"></div>
             </div>
-            <span className="text-xs font-semibold">70%</span>
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              70%
+            </span>
           </div>
         </div>
       </div>

@@ -391,7 +391,7 @@ export default function RegisterPage() {
                 I agree to the{" "}
                 <Link
                   href="/terms"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="text-primary hover:text-primary/80 font-medium"
                   target="_blank"
                 >
                   Terms of Service
@@ -399,7 +399,7 @@ export default function RegisterPage() {
                 and{" "}
                 <Link
                   href="/privacy"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="text-primary hover:text-primary/80 font-medium"
                   target="_blank"
                 >
                   Privacy Policy
@@ -423,12 +423,13 @@ export default function RegisterPage() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+          className="w-full"
+          size="lg"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Creating account...
             </>
           ) : (
@@ -437,12 +438,12 @@ export default function RegisterPage() {
         </Button>
 
         {/* Sign In Link */}
-        <div className="text-center">
+        <div className="text-center pt-2">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{" "}
             <Link
               href="/auth/login"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              className="font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               Sign in
             </Link>
