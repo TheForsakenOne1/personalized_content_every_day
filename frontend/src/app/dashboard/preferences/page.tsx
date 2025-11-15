@@ -128,54 +128,56 @@ export default function PreferencesPage() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-3xl"
-        >
-          <h1 className="text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white mb-4 leading-tight">
-            Preferences
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400">
-            Customize your content feed
-          </p>
-        </motion.div>
+        <div className="space-y-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
+              Content Preferences
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Choose topics and set your content delivery preferences
+            </p>
+          </motion.div>
 
-        {/* Topic Cards */}
-        <div className="mt-16 space-y-6">
-          {topics.map((topic, index) => (
+          {/* Topic Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {topics.map((topic, index) => (
+              <motion.div
+                key={topic.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <TopicPreferenceCard
+                  topic={topic}
+                  onToggle={handleToggle}
+                  onPriorityChange={handlePriorityChange}
+                  onFrequencyChange={handleFrequencyChange}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Save Button */}
+          {hasChanges && (
             <motion.div
-              key={topic.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              className="flex justify-end"
             >
-              <TopicPreferenceCard
-                topic={topic}
-                onToggle={handleToggle}
-                onPriorityChange={handlePriorityChange}
-                onFrequencyChange={handleFrequencyChange}
-              />
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
             </motion.div>
-          ))}
+          )}
         </div>
-
-        {/* Save Button */}
-        {hasChanges && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-12 flex justify-end"
-          >
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              {isSaving ? "Saving..." : "Save Changes"}
-            </button>
-          </motion.div>
-        )}
       </DashboardLayout>
     </ProtectedRoute>
   );
