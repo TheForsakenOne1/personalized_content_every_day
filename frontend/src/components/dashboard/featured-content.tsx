@@ -2,13 +2,9 @@
 
 import { motion } from "framer-motion";
 import {
-  Star,
-  Clock,
   Bookmark,
   BookmarkCheck,
   ExternalLink,
-  FileCode,
-  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -63,158 +59,86 @@ export function FeaturedContent({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="relative bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl overflow-hidden shadow-2xl"
-    >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-
-      <div className="relative p-8">
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+      <div className="p-8 lg:p-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-              <Star className="h-6 w-6 text-white" fill="currentColor" />
-            </div>
-            <div>
-              <h2 className="text-white font-bold text-xl">
-                Today's Featured Research
-              </h2>
-              <p className="text-white/80 text-sm">
-                Curated just for you based on your interests
-              </p>
-            </div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Featured Today
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              {category}
+            </p>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={handleSave}
             className={cn(
-              "p-3 rounded-xl backdrop-blur-sm transition-colors",
+              "p-3 rounded-lg transition-colors",
               isSaved
-                ? "bg-yellow-400/30 text-yellow-100"
-                : "bg-white/20 text-white hover:bg-white/30"
+                ? "bg-primary/10 text-primary"
+                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             )}
           >
             {isSaved ? (
-              <BookmarkCheck className="h-6 w-6" fill="currentColor" />
+              <BookmarkCheck className="h-5 w-5" fill="currentColor" />
             ) : (
-              <Bookmark className="h-6 w-6" />
+              <Bookmark className="h-5 w-5" />
             )}
-          </motion.button>
+          </button>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-10">
           {/* Left Content */}
-          <div className="space-y-4">
-            {/* Category Badge */}
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-semibold">
-                <FileCode className="h-4 w-4" />
-                {category}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm">
-                <TrendingUp className="h-4 w-4" />
-                {Math.round(qualityScore * 100)}% Match
-              </span>
-            </div>
-
+          <div className="space-y-6">
             {/* Title */}
-            <h3 className="text-3xl font-bold text-white leading-tight">
+            <h3 className="text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-white leading-tight">
               {title}
             </h3>
 
             {/* Description */}
-            <p className="text-white/90 text-lg leading-relaxed line-clamp-3">
+            <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
               {description}
             </p>
 
             {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm">
+            <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">{author}</span>
-              <span>•</span>
+              <span>·</span>
               <span>{source}</span>
-              <span>•</span>
+              <span>·</span>
               <span>{formatDate(publishedAt)}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {readTime} min read
-              </span>
-            </div>
-
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2">
-              {tags.slice(0, 4).map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded-lg"
-                >
-                  #{tag}
-                </span>
-              ))}
+              <span>·</span>
+              <span>{readTime} min read</span>
             </div>
 
             {/* CTA Button */}
-            <motion.a
+            <a
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all mt-4"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
             >
-              Read Full Paper
-              <ExternalLink className="h-5 w-5" />
-            </motion.a>
+              Read article
+              <ExternalLink className="h-4 w-4" />
+            </a>
           </div>
 
           {/* Right Thumbnail/Visual */}
-          {thumbnailUrl ? (
+          {thumbnailUrl && (
             <div className="relative lg:block hidden">
-              <div className="relative h-full min-h-[300px] rounded-xl overflow-hidden shadow-2xl">
+              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
                 <img
                   src={thumbnailUrl}
                   alt={title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              </div>
-            </div>
-          ) : (
-            <div className="relative lg:block hidden">
-              <div className="h-full min-h-[300px] bg-white/10 backdrop-blur-sm rounded-xl p-8 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <FileCode className="h-24 w-24 text-white/50 mx-auto" />
-                  <p className="text-white/80 text-lg">
-                    Research Paper
-                  </p>
-                </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* Quality Score Bar */}
-        <div className="mt-6 pt-6 border-t border-white/20">
-          <div className="flex items-center justify-between text-white/80 text-sm mb-2">
-            <span>Relevance to your interests</span>
-            <span className="font-semibold">{Math.round(qualityScore * 100)}%</span>
-          </div>
-          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${qualityScore * 100}%` }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="h-full bg-white rounded-full"
-            />
-          </div>
-        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
