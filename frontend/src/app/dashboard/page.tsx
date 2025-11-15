@@ -140,6 +140,13 @@ const mockContent: ContentItem[] = [
   },
 ];
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const { hasCompletedOnboarding } = useOnboardingStore();
@@ -177,42 +184,81 @@ export default function DashboardPage() {
     return true;
   });
 
+  // Calculate counts for stats and tabs
+  const unreadCount = content.filter((item) => !item.isRead).length;
+  const savedCount = content.filter((item) => item.isSaved).length;
+  const newItemsToday = content.filter((item) => {
+    const publishDate = new Date(item.publishedAt);
+    const today = new Date();
+    return publishDate.toDateString() === today.toDateString();
+  }).length;
+
   return (
     <ProtectedRoute>
       <DashboardLayout>
         <div className="space-y-8">
-          {/* Welcome Header */}
+          {/* Welcome Header with Stats */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="flex items-start justify-between gap-6"
           >
-            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
-              Today's Feed
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
+                {getGreeting()} 👋
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="flex gap-6">
+              <div className="text-right">
+                <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {newItemsToday}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  New today
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {savedCount}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Saved
+                </div>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Filter Tabs */}
+          {/* Filter Tabs with Counts */}
           <div className="flex gap-6 border-b border-gray-200 dark:border-gray-800">
-            {(["all", "unread", "saved"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`pb-3 font-medium text-sm transition-colors border-b-2 ${
-                  filter === tab
-                    ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
-                    : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            {(["all", "unread", "saved"] as const).map((tab) => {
+              const count =
+                tab === "all" ? content.length :
+                tab === "unread" ? unreadCount :
+                savedCount;
+
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`pb-3 font-medium text-sm transition-colors border-b-2 ${
+                    filter === tab
+                      ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
+                      : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)} ({count})
+                </button>
+              );
+            })}
           </div>
 
           {/* Content Grid */}
@@ -236,8 +282,16 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="text-center py-20">
+                <div className="text-6xl mb-4">📭</div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  No {filter !== "all" && filter} content
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  No {filter !== "all" && filter} content found
+                  {filter === "saved"
+                    ? "Start saving content by clicking the bookmark icon"
+                    : filter === "unread"
+                    ? "You've read everything! Check back later for new content"
+                    : "New content will appear here"}
                 </p>
               </div>
             )}
