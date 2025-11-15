@@ -67,37 +67,34 @@ export function FeaturedContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="relative bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl overflow-hidden shadow-2xl"
+      className="relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/20 dark:to-primary/10 rounded-3xl overflow-hidden border border-primary/20"
     >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-
-      <div className="relative p-8">
+      <div className="relative p-8 md:p-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-              <Star className="h-6 w-6 text-white" fill="currentColor" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Star className="h-7 w-7 text-primary" fill="currentColor" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-xl">
-                Today's Featured Research
+              <h2 className="text-gray-900 dark:text-white font-semibold text-2xl">
+                Featured Today
               </h2>
-              <p className="text-white/80 text-sm">
-                Curated just for you based on your interests
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Handpicked for your interests
               </p>
             </div>
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleSave}
             className={cn(
-              "p-3 rounded-xl backdrop-blur-sm transition-colors",
+              "p-3 rounded-2xl transition-all duration-200",
               isSaved
-                ? "bg-yellow-400/30 text-yellow-100"
-                : "bg-white/20 text-white hover:bg-white/30"
+                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
             )}
           >
             {isSaved ? (
@@ -108,40 +105,40 @@ export function FeaturedContent({
           </motion.button>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-10">
           {/* Left Content */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Category Badge */}
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-semibold">
-                <FileCode className="h-4 w-4" />
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-sm font-semibold text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                <FileCode className="h-4 w-4 text-primary" />
                 {category}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 dark:bg-primary/20 rounded-xl text-sm font-medium text-primary">
                 <TrendingUp className="h-4 w-4" />
                 {Math.round(qualityScore * 100)}% Match
               </span>
             </div>
 
             {/* Title */}
-            <h3 className="text-3xl font-bold text-white leading-tight">
+            <h3 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white leading-tight">
               {title}
             </h3>
 
             {/* Description */}
-            <p className="text-white/90 text-lg leading-relaxed line-clamp-3">
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
               {description}
             </p>
 
             {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm">
+            <div className="flex flex-wrap items-center gap-3 text-gray-600 dark:text-gray-400 text-sm">
               <span className="font-medium">{author}</span>
               <span>•</span>
               <span>{source}</span>
               <span>•</span>
               <span>{formatDate(publishedAt)}</span>
               <span>•</span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
                 {readTime} min read
               </span>
@@ -152,9 +149,9 @@ export function FeaturedContent({
               {tags.slice(0, 4).map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded-lg"
+                  className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg"
                 >
-                  #{tag}
+                  {tag}
                 </span>
               ))}
             </div>
@@ -164,9 +161,9 @@ export function FeaturedContent({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all mt-4"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all mt-2"
             >
               Read Full Paper
               <ExternalLink className="h-5 w-5" />
@@ -176,21 +173,20 @@ export function FeaturedContent({
           {/* Right Thumbnail/Visual */}
           {thumbnailUrl ? (
             <div className="relative lg:block hidden">
-              <div className="relative h-full min-h-[300px] rounded-xl overflow-hidden shadow-2xl">
+              <div className="relative h-full min-h-[350px] rounded-3xl overflow-hidden">
                 <img
                   src={thumbnailUrl}
                   alt={title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               </div>
             </div>
           ) : (
             <div className="relative lg:block hidden">
-              <div className="h-full min-h-[300px] bg-white/10 backdrop-blur-sm rounded-xl p-8 flex items-center justify-center">
+              <div className="h-full min-h-[350px] bg-gray-100 dark:bg-gray-800 rounded-3xl p-8 flex items-center justify-center border border-gray-200 dark:border-gray-700">
                 <div className="text-center space-y-4">
-                  <FileCode className="h-24 w-24 text-white/50 mx-auto" />
-                  <p className="text-white/80 text-lg">
+                  <FileCode className="h-24 w-24 text-gray-400 dark:text-gray-600 mx-auto" />
+                  <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
                     Research Paper
                   </p>
                 </div>
@@ -200,17 +196,17 @@ export function FeaturedContent({
         </div>
 
         {/* Quality Score Bar */}
-        <div className="mt-6 pt-6 border-t border-white/20">
-          <div className="flex items-center justify-between text-white/80 text-sm mb-2">
-            <span>Relevance to your interests</span>
-            <span className="font-semibold">{Math.round(qualityScore * 100)}%</span>
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between text-gray-600 dark:text-gray-400 text-sm mb-3">
+            <span className="font-medium">Relevance to your interests</span>
+            <span className="font-semibold text-primary">{Math.round(qualityScore * 100)}%</span>
           </div>
-          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${qualityScore * 100}%` }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="h-full bg-white rounded-full"
+              className="h-full bg-primary rounded-full"
             />
           </div>
         </div>

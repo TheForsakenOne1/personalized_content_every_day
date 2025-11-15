@@ -186,35 +186,36 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
+            className="space-y-1"
           >
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-yellow-500" />
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Good morning! Ready to learn?
-              </h1>
-            </div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Here's your personalized content for today
+            <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">
+              Welcome back
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Your personalized content for today
             </p>
           </motion.div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-blue-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Today's Content
                 </h3>
-                <TrendingUp className="h-5 w-5 text-blue-200" />
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                </div>
               </div>
-              <p className="text-3xl font-bold">{content.length}</p>
-              <p className="text-sm text-blue-100 mt-1">
+              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+                {content.length}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {content.filter((c) => !c.isRead).length} unread
               </p>
             </motion.div>
@@ -222,35 +223,45 @@ export default function DashboardPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg"
+              transition={{ delay: 0.15 }}
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-green-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Completed
                 </h3>
-                <Clock className="h-5 w-5 text-green-200" />
+                <div className="p-2 bg-emerald-500/10 rounded-xl">
+                  <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+                </div>
               </div>
-              <p className="text-3xl font-bold">
+              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {content.filter((c) => c.isRead).length}
               </p>
-              <p className="text-sm text-green-100 mt-1">Articles read</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Articles read
+              </p>
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"
+              transition={{ delay: 0.2 }}
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-purple-100">Saved</h3>
-                <Sparkles className="h-5 w-5 text-purple-200" />
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Saved
+                </h3>
+                <div className="p-2 bg-amber-500/10 rounded-xl">
+                  <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                </div>
               </div>
-              <p className="text-3xl font-bold">
+              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {content.filter((c) => c.isSaved).length}
               </p>
-              <p className="text-sm text-purple-100 mt-1">For later</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                For later
+              </p>
             </motion.div>
           </div>
 
@@ -265,34 +276,37 @@ export default function DashboardPage() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-2xl w-fit">
             {(["all", "unread", "saved"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                className={`relative px-6 py-2.5 font-medium text-sm transition-all duration-200 rounded-xl ${
                   filter === tab
-                    ? "text-blue-600 dark:text-blue-400"
+                    ? "text-gray-900 dark:text-white"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 {filter === tab && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                    className="absolute inset-0 bg-white dark:bg-gray-800 rounded-xl shadow-sm"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
+                <span className="relative z-10">
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </span>
               </button>
             ))}
           </div>
 
           {/* Content Grid */}
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
               {filter === "all" && "All Content"}
-              {filter === "unread" && "Unread Content"}
-              {filter === "saved" && "Saved Content"}
+              {filter === "unread" && "Unread"}
+              {filter === "saved" && "Saved for Later"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredContent.map((item, index) => (

@@ -89,13 +89,13 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-xl transition-all",
-        content.isRead && "opacity-75"
+        "group relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-xl transition-all duration-300",
+        content.isRead && "opacity-70"
       )}
     >
       <Link
@@ -105,20 +105,21 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
       >
         {/* Thumbnail */}
         {content.thumbnailUrl && (
-          <div className="relative h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+          <div className="relative h-56 bg-gray-100 dark:bg-gray-800 overflow-hidden">
             <img
               src={content.thumbnailUrl}
               alt={content.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
             {/* Content Type Badge */}
-            <div className="absolute top-3 left-3">
+            <div className="absolute top-4 left-4">
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm",
-                  contentTypeColors[content.type]
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-md bg-white/90 dark:bg-gray-900/90",
+                  content.type === "paper" && "text-purple-600 dark:text-purple-400",
+                  content.type === "video" && "text-red-600 dark:text-red-400",
+                  content.type === "article" && "text-blue-600 dark:text-blue-400"
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -128,8 +129,8 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
 
             {/* Read Indicator */}
             {content.isRead && (
-              <div className="absolute top-3 right-3">
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white text-xs font-semibold rounded-xl backdrop-blur-md">
                   <Eye className="h-3 w-3" />
                   Read
                 </span>
@@ -139,80 +140,74 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
         )}
 
         {/* Content */}
-        <div className="p-5">
-          {/* Category & Source */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="inline-flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
-              {content.category}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDate(content.publishedAt)}
-            </span>
-          </div>
-
+        <div className="p-6">
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 leading-tight">
             {content.title}
           </h3>
 
+          {/* Category & Date */}
+          <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-medium text-primary">
+              {content.category}
+            </span>
+            <span>•</span>
+            <span>{formatDate(content.publishedAt)}</span>
+          </div>
+
           {/* Description */}
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3 leading-relaxed">
             {content.description}
           </p>
 
           {/* Tags */}
           {content.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-5">
               {content.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md"
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg"
                 >
-                  #{tag}
+                  {tag}
                 </span>
               ))}
               {content.tags.length > 3 && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md">
-                  +{content.tags.length - 3}
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-medium rounded-lg">
+                  +{content.tags.length - 3} more
                 </span>
               )}
             </div>
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-              {/* Author/Source */}
-              <span className="truncate max-w-[150px]">
-                {content.author || content.source}
-              </span>
-
+          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
               {/* Duration or Read Time */}
               {content.type === "video" && content.duration && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
-                  {Math.floor(content.duration / 60)}m
+                  <span>{Math.floor(content.duration / 60)} min</span>
                 </span>
               )}
               {content.type !== "video" && content.readTime && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
-                  {content.readTime} min read
+                  <span>{content.readTime} min read</span>
                 </span>
               )}
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleSave}
                 className={cn(
-                  "p-2 rounded-lg transition-colors",
+                  "p-2.5 rounded-xl transition-all duration-200",
                   isSaved
-                    ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                    ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
                 )}
                 aria-label={isSaved ? "Unsave" : "Save"}
               >
@@ -222,14 +217,6 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
                   <Bookmark className="h-5 w-5" />
                 )}
               </motion.button>
-
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
-                className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg"
-              >
-                <ExternalLink className="h-5 w-5" />
-              </motion.div>
             </div>
           </div>
         </div>
