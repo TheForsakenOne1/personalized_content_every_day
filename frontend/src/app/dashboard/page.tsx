@@ -180,16 +180,17 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-12">
+        <div className="space-y-16">
           {/* Welcome Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl"
           >
-            <h1 className="text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white mb-4 leading-tight">
               Today's Feed
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
+            <p className="text-xl text-gray-600 dark:text-gray-400">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 month: "long",
@@ -198,52 +199,14 @@ export default function DashboardPage() {
             </p>
           </motion.div>
 
-          {/* Stats Row */}
-          <div className="flex flex-wrap gap-8 text-sm">
-            <div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-                {content.length}
-              </div>
-              <div className="text-gray-600 dark:text-gray-400">
-                New items
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-                {content.filter((c) => c.isRead).length}
-              </div>
-              <div className="text-gray-600 dark:text-gray-400">
-                Read today
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-                {content.filter((c) => c.isSaved).length}
-              </div>
-              <div className="text-gray-600 dark:text-gray-400">
-                Saved
-              </div>
-            </div>
-          </div>
-
-          {/* Featured Content */}
-          <div>
-            <FeaturedContent
-              {...featuredPaper}
-              onSave={() =>
-                toast.success("Featured paper saved successfully")
-              }
-            />
-          </div>
-
-          {/* Filter Pills */}
+          {/* Filter Tabs */}
           <div className="border-b border-gray-200 dark:border-gray-800">
-            <div className="flex gap-6">
+            <div className="flex gap-8">
               {(["all", "unread", "saved"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
-                  className={`pb-4 font-medium text-sm transition-colors border-b-2 ${
+                  className={`pb-4 font-medium transition-colors border-b-2 ${
                     filter === tab
                       ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
                       : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
@@ -255,10 +218,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Content Grid */}
+          {/* Content List */}
           <div>
             {filteredContent.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+              <div className="space-y-6">
                 {filteredContent.map((item, index) => (
                   <motion.div
                     key={item.id}
