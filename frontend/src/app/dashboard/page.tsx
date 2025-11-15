@@ -180,17 +180,16 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-16">
+        <div className="space-y-8">
           {/* Welcome Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl"
           >
-            <h1 className="text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white mb-4 leading-tight">
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
               Today's Feed
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 month: "long",
@@ -200,34 +199,32 @@ export default function DashboardPage() {
           </motion.div>
 
           {/* Filter Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-800">
-            <div className="flex gap-8">
-              {(["all", "unread", "saved"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`pb-4 font-medium transition-colors border-b-2 ${
-                    filter === tab
-                      ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
-                      : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
+          <div className="flex gap-6 border-b border-gray-200 dark:border-gray-800">
+            {(["all", "unread", "saved"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`pb-3 font-medium text-sm transition-colors border-b-2 ${
+                  filter === tab
+                    ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
+                    : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
           </div>
 
-          {/* Content List */}
+          {/* Content Grid */}
           <div>
             {filteredContent.length > 0 ? (
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredContent.map((item, index) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
                   >
                     <ContentCard
                       content={item}
@@ -239,7 +236,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                <p className="text-gray-500 dark:text-gray-400">
                   No {filter !== "all" && filter} content found
                 </p>
               </div>

@@ -57,79 +57,74 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
   };
 
   return (
-    <article className="group relative border-b border-gray-200 dark:border-gray-800 pb-6 last:border-b-0">
+    <article className="group relative">
       <Link
         href={`/dashboard/content/${content.id}`}
         onClick={handleRead}
         className="block"
       >
-        <div className="flex gap-6">
-          {/* Thumbnail */}
-          {content.thumbnailUrl && (
-            <div className="hidden sm:block relative w-48 h-32 flex-shrink-0 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
-              <img
-                src={content.thumbnailUrl}
-                alt={content.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-              />
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {/* Category & Source */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {content.category}
-              </span>
-              <span className="text-gray-400">·</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {content.source}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-              {content.title}
-            </h3>
-
-            {/* Description */}
-            <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-              {content.description}
-            </p>
-
-            {/* Footer */}
-            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
-              {content.author && <span>{content.author}</span>}
-              {content.author && <span>·</span>}
-              <span>{formatDate(content.publishedAt)}</span>
-              <span>·</span>
-              {content.type === "video" && content.duration && (
-                <span>{Math.floor(content.duration / 60)} min</span>
+        {/* Thumbnail */}
+        {content.thumbnailUrl && (
+          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3">
+            <img
+              src={content.thumbnailUrl}
+              alt={content.title}
+              className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-200"
+            />
+            {/* Save Button Overlay */}
+            <button
+              onClick={handleSave}
+              className={cn(
+                "absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all",
+                isSaved
+                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-lg"
+                  : "bg-white/80 dark:bg-gray-900/80 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:scale-110"
               )}
-              {content.type !== "video" && content.readTime && (
-                <span>{content.readTime} min read</span>
+              aria-label={isSaved ? "Unsave" : "Save"}
+            >
+              {isSaved ? (
+                <BookmarkCheck className="h-5 w-5" fill="currentColor" />
+              ) : (
+                <Bookmark className="h-5 w-5" />
               )}
-            </div>
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="space-y-2">
+          {/* Category & Source */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {content.category}
+            </span>
+            <span className="text-gray-400">·</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {content.source}
+            </span>
           </div>
 
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            className={cn(
-              "flex-shrink-0 p-2 h-fit rounded-lg transition-colors",
-              isSaved
-                ? "text-gray-900 dark:text-white"
-                : "text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white"
+          {/* Title */}
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 leading-snug">
+            {content.title}
+          </h3>
+
+          {/* Description */}
+          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+            {content.description}
+          </p>
+
+          {/* Footer */}
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+            <span>{formatDate(content.publishedAt)}</span>
+            <span>·</span>
+            {content.type === "video" && content.duration && (
+              <span>{Math.floor(content.duration / 60)} min</span>
             )}
-            aria-label={isSaved ? "Unsave" : "Save"}
-          >
-            {isSaved ? (
-              <BookmarkCheck className="h-6 w-6" fill="currentColor" />
-            ) : (
-              <Bookmark className="h-6 w-6" />
+            {content.type !== "video" && content.readTime && (
+              <span>{content.readTime} min read</span>
             )}
-          </button>
+          </div>
         </div>
       </Link>
     </article>
