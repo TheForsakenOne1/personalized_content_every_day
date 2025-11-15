@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Bookmark,
   BookmarkCheck,
@@ -128,11 +129,14 @@ export function FeaturedContent({
           {/* Right Thumbnail/Visual */}
           {thumbnailUrl && (
             <div className="relative lg:block hidden">
-              <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
-                <img
+              <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-800">
+                <Image
                   src={thumbnailUrl}
                   alt={title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 0px, 400px"
+                  className="object-cover"
+                  priority
                 />
               </div>
             </div>

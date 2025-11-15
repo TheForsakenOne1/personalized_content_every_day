@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Clock,
   Bookmark,
@@ -66,10 +67,12 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
         {/* Thumbnail */}
         {content.thumbnailUrl && (
           <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3">
-            <img
+            <Image
               src={content.thumbnailUrl}
               alt={content.title}
-              className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-200"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-cover group-hover:brightness-95 transition-all duration-200"
             />
             {/* Save Button Overlay */}
             <button

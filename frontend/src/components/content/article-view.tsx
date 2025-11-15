@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import NextImage from "next/image";
 import {
   FileText,
   Calendar,
@@ -16,7 +17,6 @@ import {
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import Image from "next/image";
 
 export interface ArticleData {
   id: string;
@@ -221,10 +221,13 @@ export function ArticleView({
           transition={{ delay: 0.1 }}
           className="relative w-full h-96 rounded-xl overflow-hidden shadow-lg"
         >
-          <img
+          <NextImage
             src={article.featuredImage}
             alt={article.title}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+            className="object-cover"
+            priority
           />
         </motion.div>
       )}
@@ -285,10 +288,12 @@ export function ArticleView({
               >
                 {relatedArticle.thumbnailUrl && (
                   <div className="relative w-full h-40 bg-gray-100 dark:bg-gray-700">
-                    <img
+                    <NextImage
                       src={relatedArticle.thumbnailUrl}
                       alt={relatedArticle.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 300px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                 )}

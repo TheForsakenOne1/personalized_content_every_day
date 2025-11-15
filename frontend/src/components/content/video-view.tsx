@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Video,
   Calendar,
@@ -326,10 +327,12 @@ export function VideoView({
                 <div className="relative w-full h-40 bg-gray-100 dark:bg-gray-700">
                   {relatedVideo.thumbnailUrl ? (
                     <>
-                      <img
+                      <Image
                         src={relatedVideo.thumbnailUrl}
                         alt={relatedVideo.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 300px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Play className="h-12 w-12 text-white drop-shadow-lg" />
