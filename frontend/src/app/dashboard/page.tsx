@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, Clock } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { FeaturedContent } from "@/components/dashboard/featured-content";
@@ -181,88 +180,50 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-8">
+        <div className="space-y-12">
           {/* Welcome Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-1"
           >
-            <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">
-              Welcome back
+            <h1 className="text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-white mb-2">
+              Today's Feed
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Your personalized content for today
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </motion.div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Today's Content
-                </h3>
-                <div className="p-2 bg-primary/10 rounded-xl">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+          {/* Stats Row */}
+          <div className="flex flex-wrap gap-8 text-sm">
+            <div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
                 {content.length}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {content.filter((c) => !c.isRead).length} unread
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Completed
-                </h3>
-                <div className="p-2 bg-emerald-500/10 rounded-xl">
-                  <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
-                </div>
               </div>
-              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+              <div className="text-gray-600 dark:text-gray-400">
+                New items
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
                 {content.filter((c) => c.isRead).length}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Articles read
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Saved
-                </h3>
-                <div className="p-2 bg-amber-500/10 rounded-xl">
-                  <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-500" />
-                </div>
               </div>
-              <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+              <div className="text-gray-600 dark:text-gray-400">
+                Read today
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
                 {content.filter((c) => c.isSaved).length}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                For later
-              </p>
-            </motion.div>
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">
+                Saved
+              </div>
+            </div>
           </div>
 
           {/* Featured Content */}
@@ -275,60 +236,48 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-2xl w-fit">
-            {(["all", "unread", "saved"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`relative px-6 py-2.5 font-medium text-sm transition-all duration-200 rounded-xl ${
-                  filter === tab
-                    ? "text-gray-900 dark:text-white"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-              >
-                {filter === tab && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white dark:bg-gray-800 rounded-xl shadow-sm"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10">
+          {/* Filter Pills */}
+          <div className="border-b border-gray-200 dark:border-gray-800">
+            <div className="flex gap-6">
+              {(["all", "unread", "saved"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`pb-4 font-medium text-sm transition-colors border-b-2 ${
+                    filter === tab
+                      ? "text-gray-900 dark:text-white border-gray-900 dark:border-white"
+                      : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+                >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </span>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Content Grid */}
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-              {filter === "all" && "All Content"}
-              {filter === "unread" && "Unread"}
-              {filter === "saved" && "Saved for Later"}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredContent.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <ContentCard
-                    content={item}
-                    onSave={handleSave}
-                    onRead={handleRead}
-                  />
-                </motion.div>
-              ))}
-            </div>
-
-            {filteredContent.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">
-                  No content found for this filter
+            {filteredContent.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {filteredContent.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.4 }}
+                  >
+                    <ContentCard
+                      content={item}
+                      onSave={handleSave}
+                      onRead={handleRead}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                  No {filter !== "all" && filter} content found
                 </p>
               </div>
             )}

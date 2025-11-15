@@ -1,221 +1,281 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  GraduationCap,
-  LogIn,
-  UserPlus,
-  Keyboard,
-  Sparkles,
-  ArrowRight,
-  BookOpen,
-  Video,
-  FileText,
-  Star,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-16"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-primary p-3.5 rounded-2xl">
-                <GraduationCap className="h-8 w-8 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-2">
+              <svg
+                className="h-8 w-8 text-primary"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18c-3.86-.94-7-5.19-7-9V8.3l7-3.5 7 3.5V11c0 3.81-3.14 8.06-7 9z" />
+              </svg>
+              <span className="text-xl font-semibold text-gray-900 dark:text-white">
                 EduHub
               </span>
             </div>
-          </motion.div>
-
-          {/* Hero Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-center max-w-4xl mx-auto mb-16"
-          >
-            <h1 className="text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6 leading-tight">
-              Your personalized learning journey starts here
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Discover curated research papers, articles, and videos tailored to your interests. Stay informed, stay inspired.
-            </p>
-          </motion.div>
-
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-16">
-            {/* Register */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <Link
-                href="/auth/register"
-                className="block group bg-primary hover:bg-primary/90 rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <UserPlus className="h-5 w-5 text-white" />
-                  <span className="text-lg font-semibold text-white">
-                    Create Account
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Login */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.5 }}
-            >
+            <div className="flex items-center gap-4">
               <Link
                 href="/auth/login"
-                className="block group bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg"
+                className="text-gray-900 dark:text-white font-medium hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <LogIn className="h-5 w-5 text-gray-900 dark:text-white" />
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Sign In
-                  </span>
-                </div>
+                Log in
               </Link>
+              <Link
+                href="/auth/register"
+                className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-20 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl"
+          >
+            <h1 className="text-6xl lg:text-7xl xl:text-8xl font-semibold text-gray-900 dark:text-white leading-tight mb-8">
+              Discover content that matters
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-400 mb-12 leading-relaxed">
+              Personalized research papers, articles, and videos delivered daily. Stay curious, stay informed.
+            </p>
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-primary/90 transition-colors"
+            >
+              Get started
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Image Grid Section */}
+      <section className="pb-20 lg:pb-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+            >
+              <div className="text-5xl mb-4">📚</div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+                Research
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Access the latest academic papers and breakthrough research from top institutions worldwide.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+            >
+              <div className="text-5xl mb-4">✍️</div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+                Articles
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Curated long-form content from leading experts and thought leaders in your field.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+            >
+              <div className="text-5xl mb-4">🎥</div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+                Videos
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Watch educational videos and lectures from renowned educators and scientists.
+              </p>
             </motion.div>
           </div>
+        </div>
+      </section>
 
-          {/* Features Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-20"
-          >
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-2xl mb-4">
-                <BookOpen className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Research Papers
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Access cutting-edge academic research tailored to your field of study
+      {/* How it works */}
+      <section className="py-20 lg:py-32 border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid md:grid-cols-2 gap-16 lg:gap-24 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white mb-6">
+                Tailored to your interests
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed mb-8">
+                Our intelligent system learns what topics you care about and surfaces the most relevant content every day.
               </p>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-2xl mb-4">
-                <FileText className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Curated Articles
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Stay updated with expert-written articles on trending topics
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-2xl mb-4">
-                <Video className="h-7 w-7 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Video Content
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Watch educational videos from leading experts and institutions
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Dev Mode Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="max-w-3xl mx-auto"
-          >
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
-                    <Keyboard className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Choose your topics
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Select areas of interest from astronomy to software engineering
+                    </p>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1.5">
-                    Development Mode
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Press <kbd className="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono mx-1">Shift</kbd> +{" "}
-                    <kbd className="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono mx-1">A</kbd>{" "}
-                    to explore the platform with demo data
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    2
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Get daily content
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Receive curated recommendations every morning
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    3
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Learn and grow
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Expand your knowledge with quality content
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-gray-50 dark:bg-gray-900 rounded-3xl p-12 border border-gray-200 dark:border-gray-800"
+            >
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Astronomy
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    New research on exoplanets
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Software
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Latest in machine learning
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      History
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Ancient civilizations discovered
                   </p>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Social Proof / Stats Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="border-t border-gray-200 dark:border-gray-800 py-16"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                10K+
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Research Papers
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                5K+
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Articles
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                2K+
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Videos
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                1K+
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Active Learners
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </motion.div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 lg:py-32 border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <h2 className="text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white mb-6">
+              Start learning today
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">
+              Join thousands of curious minds discovering new content every day
+            </p>
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-5 rounded-xl text-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            >
+              Create your account
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <p className="mt-6 text-sm text-gray-500 dark:text-gray-500">
+              Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs font-mono mx-1">Shift+A</kbd> to explore with demo data
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 dark:border-gray-800 py-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <svg
+                className="h-6 w-6 text-gray-900 dark:text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18c-3.86-.94-7-5.19-7-9V8.3l7-3.5 7 3.5V11c0 3.81-3.14 8.06-7 9z" />
+              </svg>
+              <span className="font-semibold text-gray-900 dark:text-white">
+                EduHub
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              © {new Date().getFullYear()} EduHub. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
