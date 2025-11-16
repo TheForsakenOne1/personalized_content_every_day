@@ -27,7 +27,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 2,
     frequency: "daily",
-    color: "bg-gradient-to-br from-purple-500 to-purple-600",
+    color: "bg-gradient-to-br from-pink-500 to-rose-500",
   },
   {
     id: "geopolitics",
@@ -37,7 +37,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 1,
     frequency: "weekly",
-    color: "bg-gradient-to-br from-blue-500 to-blue-600",
+    color: "bg-gradient-to-br from-rose-500 to-pink-600",
   },
   {
     id: "history",
@@ -47,7 +47,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 1,
     frequency: "weekly",
-    color: "bg-gradient-to-br from-amber-500 to-amber-600",
+    color: "bg-gradient-to-br from-orange-500 to-pink-500",
   },
   {
     id: "geography",
@@ -57,7 +57,7 @@ const initialTopics: TopicPreference[] = [
     enabled: false,
     priority: 0,
     frequency: "monthly",
-    color: "bg-gradient-to-br from-green-500 to-green-600",
+    color: "bg-gradient-to-br from-purple-500 to-pink-500",
   },
   {
     id: "software",
@@ -67,7 +67,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 2,
     frequency: "daily",
-    color: "bg-gradient-to-br from-indigo-500 to-indigo-600",
+    color: "bg-gradient-to-br from-fuchsia-500 to-pink-500",
   },
   {
     id: "literature",
@@ -77,7 +77,7 @@ const initialTopics: TopicPreference[] = [
     enabled: false,
     priority: 0,
     frequency: "monthly",
-    color: "bg-gradient-to-br from-pink-500 to-pink-600",
+    color: "bg-gradient-to-br from-pink-400 to-rose-400",
   },
 ];
 
@@ -171,7 +171,7 @@ export default function PreferencesPage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="px-8 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-medium hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/30 disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
