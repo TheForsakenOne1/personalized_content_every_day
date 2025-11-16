@@ -121,3 +121,6 @@ export const optionalAuth = async (
     next(error);
   }
 };
+
+// Alias for consistency
+export const auth = authenticate;
