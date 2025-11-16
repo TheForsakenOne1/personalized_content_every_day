@@ -22,6 +22,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -183,6 +184,14 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* Bottom Actions */}
       <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-2">
+        {/* Theme Toggle */}
+        <div className="flex items-center gap-3 px-4 py-2.5">
+          <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Theme</span>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
+        </div>
+
         <Link
           href="/dashboard/preferences"
           className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 transition-all duration-200"
