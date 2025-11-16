@@ -27,6 +27,7 @@ model User {
   interactions           UserContentInteraction[]
   dailyFeeds             DailyFeed[]
   activityLogs           UserActivityLog[]
+  searchHistory          SearchHistory[]
   refreshTokens          RefreshToken[]
   passwordResetTokens    PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
@@ -220,6 +221,20 @@ model UserActivityLog {
   @@index([userId, createdAt])
   @@index([activityType])
   @@map("user_activity_log")
+}
+
+model SearchHistory {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  query        String
+  resultsCount Int      @default(0) @map("results_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([query])
+  @@map("search_history")
 }
 
 model RefreshToken {
