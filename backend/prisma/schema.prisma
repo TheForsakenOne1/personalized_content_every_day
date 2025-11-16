@@ -22,12 +22,14 @@ model User {
   lastLoginAt   DateTime? @map("last_login_at")
   isActive      Boolean  @default(true) @map("is_active")
 
-  preferences       UserPreferences?
-  categories        UserCategory[]
-  interactions      UserContentInteraction[]
-  dailyFeeds        DailyFeed[]
-  activityLogs      UserActivityLog[]
-  refreshTokens     RefreshToken[]
+  preferences            UserPreferences?
+  categories             UserCategory[]
+  interactions           UserContentInteraction[]
+  dailyFeeds             DailyFeed[]
+  activityLogs           UserActivityLog[]
+  refreshTokens          RefreshToken[]
+  passwordResetTokens    PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -233,4 +235,34 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("email_verification_tokens")
 }
