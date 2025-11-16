@@ -94,7 +94,7 @@ export class ContentAggregationJob {
       console.log(`✅ Content aggregation job completed at ${new Date().toISOString()}\n`);
     } catch (error) {
       console.error('\n❌ Content aggregation job failed:', error);
-      console.error('Stack trace:', error.stack);
+      console.error('Stack trace:', (error as any)?.stack);
     } finally {
       this.isRunning = false;
     }

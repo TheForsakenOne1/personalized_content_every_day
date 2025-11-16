@@ -119,7 +119,7 @@ export class PubMedSource extends BaseSource {
       return response.data.esearchresult.idlist || [];
     } catch (error) {
       console.error('PubMed search error:', error);
-      throw new Error(`Failed to search PubMed: ${error.message}`);
+      throw new Error(`Failed to search PubMed: ${(error as any)?.message}`);
     }
   }
 
@@ -190,7 +190,7 @@ export class PubMedSource extends BaseSource {
       return articles;
     } catch (error) {
       console.error('PubMed fetch details error:', error);
-      throw new Error(`Failed to fetch article details from PubMed: ${error.message}`);
+      throw new Error(`Failed to fetch article details from PubMed: ${(error as any)?.message}`);
     }
   }
 
