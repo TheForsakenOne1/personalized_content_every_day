@@ -48,7 +48,7 @@ export const userService = {
   async getProfile(): Promise<User> {
     const response = await apiClient.get<{ success: boolean; data: { user: User } }>(
       '/api/users/me',
-      { cache: true, cacheTime: 60000 }
+      { enableCache: true, cacheTime: 60000 }
     );
 
     return response.data.user;
@@ -81,7 +81,7 @@ export const userService = {
   async getPreferences(): Promise<UserPreferences> {
     const response = await apiClient.get<{ success: boolean; data: { preferences: UserPreferences } }>(
       '/api/users/preferences',
-      { cache: true, cacheTime: 120000 }
+      { enableCache: true, cacheTime: 120000 }
     );
 
     return response.data.preferences;
@@ -114,7 +114,7 @@ export const userService = {
   async getCategories(): Promise<UserCategory[]> {
     const response = await apiClient.get<{ success: boolean; data: { categories: UserCategory[] } }>(
       '/api/users/categories',
-      { cache: true, cacheTime: 120000 }
+      { enableCache: true, cacheTime: 120000 }
     );
 
     return response.data.categories;
@@ -173,7 +173,7 @@ export const userService = {
     const queryParam = filter ? `?filter=${filter}` : '';
     const response = await apiClient.get<{ success: boolean; data: { content: Content[] } }>(
       `/api/users/feed${queryParam}`,
-      { cache: true, cacheTime: 60000 }
+      { enableCache: true, cacheTime: 60000 }
     );
 
     return response.data.content;
@@ -185,7 +185,7 @@ export const userService = {
   async getSavedContent(): Promise<Content[]> {
     const response = await apiClient.get<{ success: boolean; data: { content: Content[] } }>(
       '/api/users/saved',
-      { cache: true, cacheTime: 60000 }
+      { enableCache: true, cacheTime: 60000 }
     );
 
     return response.data.content;
@@ -197,7 +197,7 @@ export const userService = {
   async getStats(): Promise<UserStats> {
     const response = await apiClient.get<{ success: boolean; data: { stats: UserStats } }>(
       '/api/users/stats',
-      { cache: true, cacheTime: 60000 }
+      { enableCache: true, cacheTime: 60000 }
     );
 
     return response.data.stats;

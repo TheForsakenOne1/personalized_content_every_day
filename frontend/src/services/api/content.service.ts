@@ -87,7 +87,7 @@ export const contentService = {
     const queryString = queryParams.toString();
     const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Content> }>(
       `/api/content${queryString ? `?${queryString}` : ''}`,
-      { cache: true, cacheTime: 120000 } // Cache for 2 minutes
+      { enableCache: true, cacheTime: 120000 } // Cache for 2 minutes
     );
 
     return response.data;
@@ -99,7 +99,7 @@ export const contentService = {
   async getContentById(id: string): Promise<Content> {
     const response = await apiClient.get<{ success: boolean; data: { content: Content } }>(
       `/api/content/${id}`,
-      { cache: true, cacheTime: 300000 } // Cache for 5 minutes
+      { enableCache: true, cacheTime: 300000 } // Cache for 5 minutes
     );
 
     return response.data.content;
@@ -114,7 +114,7 @@ export const contentService = {
 
     const response = await apiClient.get<{ success: boolean; data: { content: Content[] } }>(
       `/api/content/search?${queryParams.toString()}`,
-      { cache: true, cacheTime: 60000 } // Cache for 1 minute
+      { enableCache: true, cacheTime: 60000 } // Cache for 1 minute
     );
 
     return response.data.content;
@@ -130,7 +130,7 @@ export const contentService = {
 
     const response = await apiClient.get<{ success: boolean; data: { content: Content[] } }>(
       `/api/content/trending${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
-      { cache: true, cacheTime: 180000 } // Cache for 3 minutes
+      { enableCache: true, cacheTime: 180000 } // Cache for 3 minutes
     );
 
     return response.data.content;

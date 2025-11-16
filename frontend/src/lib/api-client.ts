@@ -13,11 +13,11 @@ import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-interface RequestConfig extends RequestInit {
+interface RequestConfig extends Omit<RequestInit, 'cache'> {
   skipAuth?: boolean;
   retry?: number;
   retryDelay?: number;
-  cache?: boolean;
+  enableCache?: boolean;
   cacheTime?: number;
 }
 
@@ -147,7 +147,7 @@ export class ApiClient {
       skipAuth = false,
       retry = 3,
       retryDelay = 1000,
-      cache: useCache = false,
+      enableCache: useCache = false,
       cacheTime = 5 * 60 * 1000, // 5 minutes default
       ...fetchOptions
     } = options;
@@ -272,7 +272,7 @@ export class ApiClient {
     return this.makeRequest<T>(endpoint, {
       ...config,
       method: 'GET',
-      cache: config?.cache !== false, // Enable cache by default for GET
+      enableCache: config?.enableCache !== false, // Enable cache by default for GET
     });
   }
 

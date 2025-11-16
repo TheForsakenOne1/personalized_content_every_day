@@ -84,7 +84,7 @@ export const authService = {
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.get<{ success: boolean; data: { user: User } }>(
       '/api/auth/me',
-      { cache: true, cacheTime: 60000 } // Cache for 1 minute
+      { enableCache: true, cacheTime: 60000 } // Cache for 1 minute
     );
 
     return response.data.user;

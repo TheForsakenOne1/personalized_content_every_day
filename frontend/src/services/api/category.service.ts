@@ -21,7 +21,7 @@ export const categoryService = {
   async getCategories(): Promise<Category[]> {
     const response = await apiClient.get<{ success: boolean; data: { categories: Category[] } }>(
       '/api/categories',
-      { cache: true, cacheTime: 300000 } // Cache for 5 minutes
+      { enableCache: true, cacheTime: 300000 } // Cache for 5 minutes
     );
 
     return response.data.categories;
@@ -33,7 +33,7 @@ export const categoryService = {
   async getCategoryById(id: string): Promise<Category> {
     const response = await apiClient.get<{ success: boolean; data: { category: Category } }>(
       `/api/categories/${id}`,
-      { cache: true, cacheTime: 300000 }
+      { enableCache: true, cacheTime: 300000 }
     );
 
     return response.data.category;
@@ -45,7 +45,7 @@ export const categoryService = {
   async getCategoryBySlug(slug: string): Promise<Category> {
     const response = await apiClient.get<{ success: boolean; data: { category: Category } }>(
       `/api/categories/slug/${slug}`,
-      { cache: true, cacheTime: 300000 }
+      { enableCache: true, cacheTime: 300000 }
     );
 
     return response.data.category;
