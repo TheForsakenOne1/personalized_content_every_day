@@ -359,7 +359,7 @@ export class UserService {
       );
 
       const result = content.map((item) => {
-        const interaction = interactionMap.get(item.id);
+        const interaction = interactionMap.get(item.id) as any;
         return {
           ...item,
           isRead: interaction?.status === 'read',

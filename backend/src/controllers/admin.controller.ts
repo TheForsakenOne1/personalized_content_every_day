@@ -169,11 +169,11 @@ export class AdminController {
    */
   async triggerAggregation(req: Request, res: Response) {
     try {
-      const { category } = req.body;
+      const { categoryId, categoryName } = req.body;
 
       // Trigger aggregation in background
-      if (category) {
-        aggregatorService.aggregateForCategory(category).catch((err) => {
+      if (categoryId && categoryName) {
+        aggregatorService.aggregateForCategory(categoryId, categoryName).catch((err) => {
           console.error('Aggregation error:', err);
         });
       } else {
