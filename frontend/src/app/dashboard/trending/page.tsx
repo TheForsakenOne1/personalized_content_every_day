@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
-import { TrendingUp, Flame, Eye, MessageCircle, Share2 } from "lucide-react";
+import { Flame } from "lucide-react";
 
 interface TrendingItem extends ContentItem {
   views: number;
@@ -137,12 +137,6 @@ const mockTrending: TrendingItem[] = [
 ];
 
 export default function TrendingPage() {
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toString();
-  };
-
   return (
     <ProtectedRoute>
       <DashboardLayout>
@@ -165,129 +159,20 @@ export default function TrendingPage() {
             </div>
           </div>
 
-          {/* Trending Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-r from-orange-50 via-pink-50 to-rose-50 dark:from-orange-950/20 dark:via-pink-950/20 dark:to-rose-950/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/30 mb-12"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <Eye className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    511K
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Total Views
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <MessageCircle className="h-5 w-5 text-pink-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    11.5K
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Comments
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <Share2 className="h-5 w-5 text-rose-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    27.8K
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Shares
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {mockTrending.length}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Trending Now
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
           {/* Trending Content List */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {mockTrending.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-                className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 hover:border-pink-200 dark:hover:border-pink-900/50 transition-colors"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="relative"
               >
-                <div className="flex items-start gap-6">
-                  {/* Ranking */}
-                  <div className="flex flex-col items-center">
-                    <div className="text-4xl font-bold text-transparent bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 bg-clip-text">
-                      #{index + 1}
-                    </div>
-                    <div className="mt-2 px-2 py-1 bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-950/50 dark:to-pink-950/50 rounded-full">
-                      <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">
-                        {item.trendingScore}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <ContentCard content={item} />
-                  </div>
-
-                  {/* Engagement Stats */}
-                  <div className="hidden lg:flex flex-col gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Eye className="h-4 w-4" />
-                      <span className="font-medium">{formatNumber(item.views)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="font-medium">{formatNumber(item.comments)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Share2 className="h-4 w-4" />
-                      <span className="font-medium">{formatNumber(item.shares)}</span>
-                    </div>
-                  </div>
+                <div className="absolute -left-2 top-3 z-10 px-2 py-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold rounded-full shadow-lg">
+                  #{index + 1}
                 </div>
-
-                {/* Mobile Engagement Stats */}
-                <div className="lg:hidden flex items-center gap-6 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Eye className="h-4 w-4" />
-                    <span className="font-medium">{formatNumber(item.views)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <MessageCircle className="h-4 w-4" />
-                    <span className="font-medium">{formatNumber(item.comments)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Share2 className="h-4 w-4" />
-                    <span className="font-medium">{formatNumber(item.shares)}</span>
-                  </div>
-                </div>
+                <ContentCard content={item} />
               </motion.div>
             ))}
           </div>

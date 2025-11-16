@@ -16,7 +16,55 @@ import {
   MapPin,
   Code,
   BookOpen,
+  FileText,
+  Database,
 } from "lucide-react";
+
+interface PaperSource {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+}
+
+const initialPaperSources: PaperSource[] = [
+  {
+    id: "arxiv",
+    name: "arXiv",
+    description: "Open access preprints in physics, mathematics, computer science",
+    enabled: true,
+  },
+  {
+    id: "pubmed",
+    name: "PubMed",
+    description: "Biomedical and life sciences research articles",
+    enabled: true,
+  },
+  {
+    id: "ieee",
+    name: "IEEE Xplore",
+    description: "Engineering, computer science, and technology papers",
+    enabled: false,
+  },
+  {
+    id: "springer",
+    name: "Springer",
+    description: "Multidisciplinary scientific research papers",
+    enabled: false,
+  },
+  {
+    id: "nature",
+    name: "Nature",
+    description: "High-impact research across all sciences",
+    enabled: true,
+  },
+  {
+    id: "sciencedirect",
+    name: "ScienceDirect",
+    description: "Peer-reviewed journals and book chapters",
+    enabled: false,
+  },
+];
 
 const initialTopics: TopicPreference[] = [
   {
@@ -27,7 +75,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 2,
     frequency: "daily",
-    color: "bg-gradient-to-br from-pink-500 to-rose-500",
+    color: "bg-gradient-to-br from-pink-500 to-pink-600",
   },
   {
     id: "geopolitics",
@@ -37,7 +85,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 1,
     frequency: "weekly",
-    color: "bg-gradient-to-br from-rose-500 to-pink-600",
+    color: "bg-gradient-to-br from-pink-400 to-pink-500",
   },
   {
     id: "history",
@@ -47,7 +95,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 1,
     frequency: "weekly",
-    color: "bg-gradient-to-br from-orange-500 to-pink-500",
+    color: "bg-gradient-to-br from-pink-600 to-rose-600",
   },
   {
     id: "geography",
@@ -57,7 +105,7 @@ const initialTopics: TopicPreference[] = [
     enabled: false,
     priority: 0,
     frequency: "monthly",
-    color: "bg-gradient-to-br from-purple-500 to-pink-500",
+    color: "bg-gradient-to-br from-rose-500 to-pink-500",
   },
   {
     id: "software",
@@ -67,7 +115,7 @@ const initialTopics: TopicPreference[] = [
     enabled: true,
     priority: 2,
     frequency: "daily",
-    color: "bg-gradient-to-br from-fuchsia-500 to-pink-500",
+    color: "bg-gradient-to-br from-pink-500 to-rose-500",
   },
   {
     id: "literature",
@@ -77,12 +125,13 @@ const initialTopics: TopicPreference[] = [
     enabled: false,
     priority: 0,
     frequency: "monthly",
-    color: "bg-gradient-to-br from-pink-400 to-rose-400",
+    color: "bg-gradient-to-br from-rose-400 to-pink-400",
   },
 ];
 
 export default function PreferencesPage() {
   const [topics, setTopics] = useState<TopicPreference[]>(initialTopics);
+  const [paperSources, setPaperSources] = useState<PaperSource[]>(initialPaperSources);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -108,6 +157,15 @@ export default function PreferencesPage() {
   ) => {
     setTopics((prev) =>
       prev.map((topic) => (topic.id === id ? { ...topic, frequency } : topic))
+    );
+    setHasChanges(true);
+  };
+
+  const handlePaperSourceToggle = (id: string) => {
+    setPaperSources((prev) =>
+      prev.map((source) =>
+        source.id === id ? { ...source, enabled: !source.enabled } : source
+      )
     );
     setHasChanges(true);
   };
@@ -160,6 +218,101 @@ export default function PreferencesPage() {
               </motion.div>
             ))}
           </div>
+
+          {/* Research Papers Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="h-6 w-6 text-pink-500" />
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  Research Paper Sources
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Select sources to discover and store research papers
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paperSources.map((source, index) => (
+                <motion.div
+                  key={source.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 + index * 0.05 }}
+                  className={`relative bg-white dark:bg-gray-900 rounded-xl border-2 p-4 transition-all cursor-pointer ${
+                    source.enabled
+                      ? "border-pink-500 dark:border-pink-500 shadow-lg shadow-pink-500/20"
+                      : "border-gray-200 dark:border-gray-800 hover:border-pink-200 dark:hover:border-pink-900/50"
+                  }`}
+                  onClick={() => handlePaperSourceToggle(source.id)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        source.enabled
+                          ? "bg-gradient-to-br from-pink-500 to-rose-500 text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                      }`}
+                    >
+                      <Database className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                          {source.name}
+                        </h3>
+                        {source.enabled && (
+                          <div className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-medium rounded-full">
+                            Active
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {source.description}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Suggested Papers */}
+            <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-6 border border-pink-200 dark:border-pink-900/30">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Suggested Papers for You
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Based on your interests in{" "}
+                <span className="font-medium text-pink-600 dark:text-pink-400">
+                  {topics
+                    .filter((t) => t.enabled)
+                    .map((t) => t.name)
+                    .join(", ")}
+                </span>
+                , we'll suggest relevant research papers from your enabled sources.
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Active sources:
+                </span>
+                <span className="text-pink-600 dark:text-pink-400 font-semibold">
+                  {paperSources.filter((s) => s.enabled).length} of{" "}
+                  {paperSources.length}
+                </span>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Save Button */}
           {hasChanges && (
