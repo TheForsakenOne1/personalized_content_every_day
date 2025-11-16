@@ -34,9 +34,16 @@ export function ThemeToggle() {
         )}
       </button>
 
-      {/* Tooltip */}
-      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-        {theme === "dark" ? "Light mode" : "Dark mode"}
+      {/* Tooltip with Arrow */}
+      <div className="absolute -bottom-11 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-[9999] group-hover:translate-y-0 translate-y-1">
+        <div className="relative">
+          {/* Arrow */}
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-gray-900 dark:bg-gray-100"></div>
+          {/* Tooltip Box */}
+          <div className="relative px-3 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap shadow-lg">
+            {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
+          </div>
+        </div>
       </div>
     </div>
   );
