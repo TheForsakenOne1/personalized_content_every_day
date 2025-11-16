@@ -173,7 +173,7 @@ export default function DashboardPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
-                      <ContentCard {...item} />
+                      <ContentCard content={item} />
                     </motion.div>
                   ))}
                 </div>
