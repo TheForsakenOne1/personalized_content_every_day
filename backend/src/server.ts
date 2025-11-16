@@ -17,6 +17,8 @@ import userRoutes from './routes/user.routes';
 import categoryRoutes from './routes/category.routes';
 import contentRoutes from './routes/content.routes';
 import searchRoutes from './routes/search.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +51,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling
 app.use(notFoundHandler);
