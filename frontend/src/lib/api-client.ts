@@ -316,11 +316,11 @@ export class ApiClient {
       return;
     }
 
-    for (const key of cache.keys()) {
+    Array.from(cache.keys()).forEach(key => {
       if (key.includes(pattern)) {
         cache.delete(key);
       }
-    }
+    });
   }
 
   /**
