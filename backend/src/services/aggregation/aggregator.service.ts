@@ -2,7 +2,9 @@ import { BaseSource, NormalizedContent } from './base.source';
 import { qualityScorer } from './quality-scorer.service';
 import { arxivSource } from './sources/arxiv.source';
 import { pubmedSource } from './sources/pubmed.source';
-// Import other sources here as they're created
+import { ieeeSource } from './sources/ieee.source';
+import { springerSource } from './sources/springer.source';
+import { scholarSource } from './sources/scholar.source';
 
 export interface AggregationResult {
   source: string;
@@ -19,7 +21,9 @@ export class AggregatorService {
     // Register available sources
     this.registerSource(arxivSource);
     this.registerSource(pubmedSource);
-    // Register other sources here
+    this.registerSource(ieeeSource);
+    this.registerSource(springerSource);
+    this.registerSource(scholarSource);
   }
 
   /**

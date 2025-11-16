@@ -1,5 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { trendingCache } from './cache/trending.cache';
+import { searchCache } from './cache/search.cache';
 
 interface ContentFilters {
   categoryId?: string;
@@ -266,6 +268,15 @@ export class ContentService {
   }
 
   async getTrendingContent(days: number = 7, limit: number = 10) {
+    // Try to get from cache first
+    const cached = await trendingCache.get(days, limit);
+    if (cached) {
+      console.log(`📦 Trending cache HIT (${days}d, limit=${limit})`);
+      return cached;
+    }
+
+    console.log(`🔍 Trending cache MISS (${days}d, limit=${limit}) - fetching from DB`);
+
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - days);
 
@@ -297,10 +308,22 @@ export class ContentService {
       LIMIT ${limit}
     `;
 
+    // Store in cache for 15 minutes
+    await trendingCache.set(days, limit, content);
+
     return content;
   }
 
   async searchContent(query: string, limit: number = 20) {
+    // Try to get from cache first
+    const cached = await searchCache.get(query, limit);
+    if (cached) {
+      console.log(`📦 Search cache HIT (q="${query}", limit=${limit})`);
+      return cached;
+    }
+
+    console.log(`🔍 Search cache MISS (q="${query}", limit=${limit}) - fetching from DB`);
+
     const content = await prisma.content.findMany({
       where: {
         OR: [
@@ -323,9 +346,14 @@ export class ContentService {
       },
     });
 
-    return content.map((item) => ({
+    const result = content.map((item) => ({
       ...item,
       tags: item.tags.map((ct) => ct.tag),
     }));
+
+    // Store in cache for 1 hour
+    await searchCache.set(query, limit, result);
+
+    return result;
   }
 }

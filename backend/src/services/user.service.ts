@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
 import { hashPassword } from '../utils/password';
+import { feedCache } from './cache/feed.cache';
 
 export class UserService {
   async getUserProfile(userId: string) {
@@ -256,6 +257,15 @@ export class UserService {
   }
 
   async getUserFeed(userId: string, filter?: 'all' | 'unread' | 'saved') {
+    // Try to get from cache first
+    const cached = await feedCache.get(userId, filter);
+    if (cached) {
+      console.log(`📦 Feed cache HIT (user=${userId}, filter=${filter || 'all'})`);
+      return cached;
+    }
+
+    console.log(`🔍 Feed cache MISS (user=${userId}, filter=${filter || 'all'}) - fetching from DB`);
+
     const userCategories = await prisma.userCategory.findMany({
       where: { userId, isActive: true },
       select: { categoryId: true },
@@ -303,7 +313,7 @@ export class UserService {
       });
 
       // Add interaction data to content
-      return content.map((item) => {
+      const result = content.map((item) => {
         const interaction = interactions.find((i) => i.contentId === item.id);
         return {
           ...item,
@@ -312,6 +322,11 @@ export class UserService {
           readAt: interaction?.readAt,
         };
       });
+
+      // Store in cache for 5 minutes
+      await feedCache.set(userId, result, filter);
+
+      return result;
     } else {
       // Get all content for user's categories
       const content = await prisma.content.findMany({
@@ -343,7 +358,7 @@ export class UserService {
         interactions.map((i) => [i.contentId, i])
       );
 
-      return content.map((item) => {
+      const result = content.map((item) => {
         const interaction = interactionMap.get(item.id);
         return {
           ...item,
@@ -352,6 +367,11 @@ export class UserService {
           readAt: interaction?.readAt,
         };
       });
+
+      // Store in cache for 5 minutes
+      await feedCache.set(userId, result, filter);
+
+      return result;
     }
   }
 

@@ -23,6 +23,11 @@ export const config = {
   youtubeApiKey: process.env.YOUTUBE_API_KEY || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
 
+  // Research Paper Sources
+  ieeApiKey: process.env.IEEE_API_KEY || '',
+  springerApiKey: process.env.SPRINGER_API_KEY || '',
+  serpApiKey: process.env.SERP_API_KEY || '', // For Google Scholar
+
   // n8n
   n8nWebhookSecret: process.env.N8N_WEBHOOK_SECRET || '',
   n8nApiUrl: process.env.N8N_API_URL || '',
