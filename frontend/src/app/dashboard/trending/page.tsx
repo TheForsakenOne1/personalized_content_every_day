@@ -3,17 +3,11 @@
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
-import { Flame } from "lucide-react";
+import { ContentItem } from "@/components/dashboard/content-card";
+import { Flame, Clock } from "lucide-react";
+import Link from "next/link";
 
-interface TrendingItem extends ContentItem {
-  views: number;
-  comments: number;
-  shares: number;
-  trendingScore: number;
-}
-
-const mockTrending: TrendingItem[] = [
+const mockTrending: ContentItem[] = [
   {
     id: "tr-1",
     type: "video",
@@ -29,10 +23,6 @@ const mockTrending: TrendingItem[] = [
     duration: 900,
     isRead: false,
     isSaved: false,
-    views: 125400,
-    comments: 3200,
-    shares: 8900,
-    trendingScore: 98,
   },
   {
     id: "tr-2",
@@ -49,10 +39,6 @@ const mockTrending: TrendingItem[] = [
     readTime: 8,
     isRead: false,
     isSaved: true,
-    views: 98200,
-    comments: 2450,
-    shares: 5600,
-    trendingScore: 95,
   },
   {
     id: "tr-3",
@@ -69,10 +55,6 @@ const mockTrending: TrendingItem[] = [
     readTime: 15,
     isRead: false,
     isSaved: false,
-    views: 87500,
-    comments: 1890,
-    shares: 4200,
-    trendingScore: 92,
   },
   {
     id: "tr-4",
@@ -89,10 +71,6 @@ const mockTrending: TrendingItem[] = [
     readTime: 20,
     isRead: false,
     isSaved: true,
-    views: 76800,
-    comments: 1650,
-    shares: 3800,
-    trendingScore: 89,
   },
   {
     id: "tr-5",
@@ -109,10 +87,6 @@ const mockTrending: TrendingItem[] = [
     duration: 1440,
     isRead: true,
     isSaved: false,
-    views: 64200,
-    comments: 1320,
-    shares: 2900,
-    trendingScore: 85,
   },
   {
     id: "tr-6",
@@ -129,10 +103,6 @@ const mockTrending: TrendingItem[] = [
     readTime: 12,
     isRead: false,
     isSaved: true,
-    views: 58900,
-    comments: 980,
-    shares: 2400,
-    trendingScore: 82,
   },
 ];
 
@@ -160,19 +130,50 @@ export default function TrendingPage() {
           </div>
 
           {/* Trending Content List */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {mockTrending.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="relative"
               >
-                <div className="absolute -left-2 top-3 z-10 px-2 py-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold rounded-full shadow-lg">
-                  #{index + 1}
-                </div>
-                <ContentCard content={item} />
+                <Link
+                  href={`/dashboard/content/${item.id}`}
+                  className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all group"
+                >
+                  {/* Ranking Badge */}
+                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-500 rounded-full text-white text-sm font-bold shadow-md">
+                    {index + 1}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1 mb-1 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                      {item.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <span className="font-medium text-pink-600 dark:text-pink-400">
+                        {item.category}
+                      </span>
+                      <span>•</span>
+                      <span>{item.source}</span>
+                      {(item.readTime || item.duration) && (
+                        <>
+                          <span>•</span>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {item.type === "video" && item.duration
+                                ? `${Math.floor(item.duration / 60)} min`
+                                : `${item.readTime} min read`}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
