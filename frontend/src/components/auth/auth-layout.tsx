@@ -31,7 +31,7 @@ export function AuthLayout({
             <div className="bg-primary p-3 rounded-2xl group-hover:scale-105 transition-transform duration-200">
               <GraduationCap className="h-7 w-7 text-white" />
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">EduHub</span>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">Vidya</span>
           </Link>
         </motion.div>
 
@@ -90,7 +90,7 @@ export function AuthLayout({
         className="mt-10 text-center text-sm text-gray-500 dark:text-gray-500"
       >
         <p>
-          © {new Date().getFullYear()} EduHub. All rights reserved.
+          © {new Date().getFullYear()} Vidya. All rights reserved.
         </p>
       </motion.div>
     </div>

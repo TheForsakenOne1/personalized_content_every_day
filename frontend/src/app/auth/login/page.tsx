@@ -86,7 +86,7 @@ export default function LoginPage() {
                 <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18c-3.86-.94-7-5.19-7-9V8.3l7-3.5 7 3.5V11c0 3.81-3.14 8.06-7 9z" />
               </svg>
               <span className="text-xl font-semibold text-gray-900 dark:text-white">
-                EduHub
+                Vidya
               </span>
             </div>
           </Link>
@@ -97,7 +97,7 @@ export default function LoginPage() {
               Welcome back
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Log in to continue to EduHub
+              Log in to continue to Vidya
             </p>
           </div>
 

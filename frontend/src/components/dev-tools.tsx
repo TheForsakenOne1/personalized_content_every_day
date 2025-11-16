@@ -23,7 +23,7 @@ export function DevTools() {
       // Mock user data
       const mockUser = {
         id: "mock-user-123",
-        email: "demo@eduhub.com",
+        email: "demo@vidya.com",
         username: "demo",
         fullName: "Demo User",
         avatarUrl: null,

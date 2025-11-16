@@ -1,11 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { DevTools } from "@/components/dev-tools";
 
 export const metadata: Metadata = {
-  title: "EduHub - Personalized Learning Platform",
+  title: "Vidya - Personalized Learning Platform",
   description: "Your personalized daily feed of educational content from research papers, articles, and videos",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FF385C" },
+    { media: "(prefers-color-scheme: dark)", color: "#1F2937" },
+  ],
 };
 
 export default function RootLayout({

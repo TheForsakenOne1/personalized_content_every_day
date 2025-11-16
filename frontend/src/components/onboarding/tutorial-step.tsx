@@ -122,7 +122,7 @@ export function TutorialStep({ onComplete, onBack }: TutorialStepProps) {
             Quick Tutorial
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Learn the key features to get the most out of EduHub
+            Learn the key features to get the most out of Vidya
           </p>
         </motion.div>
 

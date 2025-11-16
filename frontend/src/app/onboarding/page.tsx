@@ -50,7 +50,7 @@ export default function OnboardingPage() {
 
   const handleComplete = () => {
     completeOnboarding();
-    toast.success("Welcome to EduHub! 🎉", {
+    toast.success("Welcome to Vidya! 🎉", {
       description: "Your personalized feed is ready.",
     });
     router.push("/dashboard");

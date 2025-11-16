@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -66,7 +67,7 @@ export function TopNavigation({
               <GraduationCap className="h-5 w-5 text-white" />
             </div>
             <span className="hidden sm:block font-bold text-gray-900 dark:text-white">
-              EduHub
+              Vidya
             </span>
           </Link>
         </div>
@@ -85,6 +86,9 @@ export function TopNavigation({
 
         {/* Right Section */}
         <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Notifications */}
           <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
