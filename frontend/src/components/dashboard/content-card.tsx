@@ -58,7 +58,7 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
   };
 
   return (
-    <article className="group relative">
+    <article className="group relative transition-all duration-200 hover:scale-105">
       <Link
         href={`/dashboard/content/${content.id}`}
         onClick={handleRead}
@@ -66,7 +66,7 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
       >
         {/* Thumbnail */}
         {content.thumbnailUrl && (
-          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3">
+          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-shadow">
             <Image
               src={content.thumbnailUrl}
               alt={content.title}
@@ -78,9 +78,9 @@ export function ContentCard({ content, onSave, onRead }: ContentCardProps) {
             <button
               onClick={handleSave}
               className={cn(
-                "absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all",
+                "absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all duration-200",
                 isSaved
-                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-lg"
+                  ? "bg-pink-500 text-white shadow-lg shadow-pink-500/50 scale-110"
                   : "bg-white/80 dark:bg-gray-900/80 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:scale-110"
               )}
               aria-label={isSaved ? "Unsave" : "Save"}

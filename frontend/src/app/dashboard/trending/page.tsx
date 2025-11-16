@@ -140,10 +140,10 @@ export default function TrendingPage() {
               >
                 <Link
                   href={`/dashboard/content/${item.id}`}
-                  className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all group"
+                  className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all group hover:shadow-lg hover:scale-[1.02]"
                 >
                   {/* Ranking Badge */}
-                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-500 rounded-full text-white text-sm font-bold shadow-md">
+                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-500 rounded-full text-white text-sm font-bold shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all">
                     {index + 1}
                   </div>
 

@@ -277,9 +277,9 @@ export default function PreferencesPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 * index }}
                     onClick={() => toggleTopic(topic.id)}
-                    className={`relative p-5 rounded-2xl border-2 text-left transition-all duration-200 ${
+                    className={`relative p-5 rounded-2xl border-2 text-left transition-all duration-200 hover:scale-105 ${
                       topic.enabled
-                        ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20 shadow-lg shadow-pink-500/10"
+                        ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20 shadow-lg shadow-pink-500/10 scale-[1.02]"
                         : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-pink-300 dark:hover:border-pink-900/50"
                     }`}
                   >
@@ -343,9 +343,9 @@ export default function PreferencesPage() {
                   <button
                     key={source.id}
                     onClick={() => toggleSource(source.id)}
-                    className={`p-4 rounded-xl border-2 text-center font-medium transition-all ${
+                    className={`p-4 rounded-xl border-2 text-center font-medium transition-all hover:scale-105 ${
                       source.enabled
-                        ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400"
+                        ? "border-pink-500 bg-pink-50 dark:bg-pink-950/20 text-pink-700 dark:text-pink-400 shadow-md"
                         : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-pink-300 dark:hover:border-pink-900/50"
                     }`}
                   >

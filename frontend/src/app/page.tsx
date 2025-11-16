@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
   return (
@@ -24,15 +25,16 @@ export default function HomePage() {
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <Link
                 href="/auth/login"
-                className="text-gray-900 dark:text-white font-medium hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-900 dark:text-white font-medium hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
               >
                 Log in
               </Link>
               <Link
                 href="/auth/register"
-                className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-5 py-2.5 rounded-lg font-medium hover:from-pink-600 hover:to-rose-600 transition-all shadow-md hover:shadow-lg hover:scale-105"
               >
                 Sign up
               </Link>
@@ -58,7 +60,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/auth/register"
-              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 py-4 rounded-xl text-lg font-medium hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl hover:scale-105"
             >
               Get started
               <ArrowRight className="h-5 w-5" />
@@ -75,7 +77,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all hover:shadow-lg hover:scale-105 cursor-pointer"
             >
               <div className="text-5xl mb-4">📚</div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -90,7 +92,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all hover:shadow-lg hover:scale-105 cursor-pointer"
             >
               <div className="text-5xl mb-4">✍️</div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -105,7 +107,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+              className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 lg:p-12 border border-gray-200 dark:border-gray-800 hover:border-pink-300 dark:hover:border-pink-900/50 transition-all hover:shadow-lg hover:scale-105 cursor-pointer"
             >
               <div className="text-5xl mb-4">🎥</div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -242,7 +244,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/auth/register"
-              className="inline-flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-5 rounded-xl text-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-10 py-5 rounded-xl text-lg font-medium hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl hover:scale-105"
             >
               Create your account
               <ArrowRight className="h-5 w-5" />
