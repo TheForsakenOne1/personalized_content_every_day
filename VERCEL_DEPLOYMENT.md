@@ -45,7 +45,7 @@ NEXT_PUBLIC_API_URL=https://your-backend-url.com/api
 
 Make sure Vercel is deploying from the correct branch:
 
-**Settings → Git → Production Branch**: `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`
+**Settings → Git → Production Branch**: `main`
 
 ## Files Created
 
@@ -55,7 +55,7 @@ Make sure Vercel is deploying from the correct branch:
 ## Deployment Checklist
 
 - [ ] Root Directory set to `frontend` in Vercel
-- [ ] Production Branch set to `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`
+- [ ] Production Branch set to `main`
 - [ ] Environment variable `NEXT_PUBLIC_API_URL` set
 - [ ] Build cache cleared (Settings → General → Clear Build Cache)
 - [ ] Redeploy triggered

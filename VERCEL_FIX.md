@@ -2,18 +2,18 @@
 
 ## The Problem
 
-Vercel is trying to deploy from a `main` branch that doesn't exist, while your code is on branch `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`.
+Vercel was trying to deploy from a branch that didn't match the repository's main branch.
 
-## Solution: Configure Vercel to Use the Correct Branch
+## Solution: Configure Vercel to Use the Main Branch
 
 ### Option 1: Update Vercel Settings (Recommended)
 
 1. Go to your Vercel project dashboard
 2. Click **Settings**
 3. Go to **Git** section
-4. Under **Production Branch**, change it to:
+4. Under **Production Branch**, set it to:
    ```
-   claude/main-01DqTFYgfKBYyNA8CLbUsVj6
+   main
    ```
 5. Save the changes
 6. Go to **Deployments** tab
@@ -30,19 +30,16 @@ vercel --prod
 
 This will deploy the current branch directly.
 
-### Option 3: Create a Pull Request
+### Option 3: Use Main Branch
 
-1. Go to GitHub repository
-2. Create a Pull Request from `claude/main-01DqTFYgfKBYyNA8CLbUsVj6` to `main`
-3. Merge the PR (this creates the `main` branch)
-4. Vercel will auto-deploy from `main`
+The repository now has a `main` branch with all the latest fixes. Vercel should be configured to deploy from `main`.
 
 ## Verify the Fix is on GitHub
 
-The fix IS pushed to GitHub. You can verify by visiting:
+The fix is pushed to GitHub. You can verify by visiting:
 
 ```
-https://github.com/TheForsakenOne1/personalized_content_every_day/blob/claude/main-01DqTFYgfKBYyNA8CLbUsVj6/frontend/src/lib/api.ts
+https://github.com/TheForsakenOne1/personalized_content_every_day/blob/main/frontend/src/lib/api.ts
 ```
 
 Look for lines 18-22:
@@ -79,7 +76,7 @@ headers['Authorization'] = `Bearer ${token}`;  // ❌ OLD CODE
 2. **Check Deployment Logs**:
    - Go to Deployments tab
    - Click on the latest deployment
-   - Check the "Source" - it should show `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`
+   - Check the "Source" - it should show `main`
    - If it shows a different branch, that's the problem
 
 3. **Manual Deployment**:
@@ -91,17 +88,17 @@ headers['Authorization'] = `Bearer ${token}`;  // ❌ OLD CODE
 
 1. Go to GitHub repository settings
 2. Click "Branches"
-3. Set default branch to `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`
+3. Set default branch to `main`
 4. Vercel will follow GitHub's default branch
 
 ## Confirmation Checklist
 
 Before redeploying, verify:
 
-- [ ] Branch `claude/main-01DqTFYgfKBYyNA8CLbUsVj6` exists on GitHub
-- [ ] Latest commit is `1304a9e` or newer
+- [ ] Branch `main` exists on GitHub
+- [ ] Latest commit includes the Headers API fix
 - [ ] File `frontend/src/lib/api.ts` uses `new Headers()` API
-- [ ] Vercel is configured to deploy from the correct branch
+- [ ] Vercel is configured to deploy from `main` branch
 - [ ] Build cache is cleared in Vercel
 
 ## Expected Build Output

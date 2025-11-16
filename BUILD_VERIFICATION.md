@@ -1,7 +1,7 @@
 # Build Verification Summary
 
 **Date:** $(date)
-**Branch:** claude/main-01DqTFYgfKBYyNA8CLbUsVj6
+**Branch:** main
 **Latest Commit:** 802194f
 
 ## Local Build Verification ✅
@@ -74,8 +74,8 @@ All `<img>` tags replaced with `<Image />`:
 
 ```bash
 $ git status
-On branch claude/main-01DqTFYgfKBYyNA8CLbUsVj6
-Your branch is up to date with 'origin/claude/main-01DqTFYgfKBYyNA8CLbUsVj6'.
+On branch main
+Your branch is up to date with 'origin/main'.
 nothing to commit, working tree clean
 ```
 
@@ -144,8 +144,7 @@ Route (app)                              Size     First Load JS
 When deploying on Vercel:
 
 1. **Branch Configuration**
-   - Ensure Vercel is deploying from: `claude/main-01DqTFYgfKBYyNA8CLbUsVj6`
-   - Or create a PR to merge to `main` branch
+   - Ensure Vercel is deploying from: `main`
 
 2. **Environment Variables**
    - Set `NEXT_PUBLIC_API_URL` to your backend URL
