@@ -249,9 +249,6 @@ export default function HomePage() {
               Create your account
               <ArrowRight className="h-5 w-5" />
             </Link>
-            <p className="mt-6 text-sm text-gray-500 dark:text-gray-500">
-              Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs font-mono mx-1">Shift+A</kbd> to explore with demo data
-            </p>
           </motion.div>
         </div>
       </section>

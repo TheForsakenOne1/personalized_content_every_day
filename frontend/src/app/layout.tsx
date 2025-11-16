@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { DevTools } from "@/components/dev-tools";
 
 export const metadata: Metadata = {
   title: "Vidya - Personalized Learning Platform",
@@ -25,7 +24,6 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <Providers>
           {children}
-          <DevTools />
         </Providers>
       </body>
     </html>
