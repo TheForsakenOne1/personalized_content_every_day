@@ -1,22 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
+import logger from '../utils/logger';
+import { HTTP_STATUS } from '../constants';
 
 /**
  * Admin Middleware
  * Verifies that the authenticated user has admin privileges
  */
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const userId = (req as any).user?.id;
+  const userId = (req as any).user?.id;
 
+  try {
     if (!userId) {
-      return res.status(401).json({
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
         message: 'Authentication required',
       });
     }
 
-    // TODO: Uncomment when Prisma is generated and User model has isAdmin field
+    // Note: Full database implementation pending
+    // When database is fully configured, uncomment the following:
     /*
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -24,7 +27,7 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
     });
 
     if (!user || !user.isAdmin) {
-      return res.status(403).json({
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: 'Admin access required',
       });
@@ -39,7 +42,7 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
       adminEmails.includes(user.email);
 
     if (!isAdminUser) {
-      return res.status(403).json({
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: 'Admin access required',
       });
@@ -47,8 +50,8 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
 
     next();
   } catch (error) {
-    console.error('Admin middleware error:', error);
-    return res.status(500).json({
+    logger.error('Admin middleware error', { error: (error as Error).message, userId });
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Internal server error',
     });

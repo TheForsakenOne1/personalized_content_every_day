@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 export interface RawContent {
   externalId: string;
   title: string;
@@ -70,7 +71,7 @@ export abstract class BaseSource {
       const results = await this.fetchContent({ limit: 1 });
       return results.length >= 0; // Even 0 results means the API is working
     } catch (error) {
-      console.error(`${this.name} is not available:`, error);
+      logger.error(`${this.name} is not available:`, error);
       return false;
     }
   }
@@ -83,11 +84,11 @@ export abstract class BaseSource {
       const raw = await this.fetchContent(options);
       const normalized = raw.map(r => this.normalizeContent(r));
 
-      console.log(`${this.name}: Fetched ${normalized.length} items`);
+      logger.info(`${this.name}: Fetched ${normalized.length} items`);
 
       return normalized;
     } catch (error) {
-      console.error(`${this.name} fetch error:`, error);
+      logger.error(`${this.name} fetch error:`, error);
       throw error;
     }
   }

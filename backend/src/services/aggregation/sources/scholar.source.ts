@@ -1,3 +1,4 @@
+import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 import { config } from '../../../config';
@@ -22,7 +23,7 @@ export class ScholarSource extends BaseSource {
     const apiKey = this.getApiKey();
 
     if (!apiKey) {
-      console.warn('SerpAPI key not configured. Skipping Google Scholar source.');
+      logger.warn('SerpAPI key not configured. Skipping Google Scholar source.');
       return [];
     }
 
@@ -60,9 +61,9 @@ export class ScholarSource extends BaseSource {
       return this.parseScholarResponse(response.data.organic_results);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        console.error('SerpAPI authentication failed. Check API key.');
+        logger.error('SerpAPI authentication failed. Check API key.');
       } else {
-        console.error('Google Scholar API error:', error.message);
+        logger.error('Google Scholar API error:', error.message);
       }
       throw new Error(`Failed to fetch from Google Scholar: ${error.message}`);
     }

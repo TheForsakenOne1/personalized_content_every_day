@@ -1,3 +1,4 @@
+import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 import { config } from '../../../config';
@@ -32,7 +33,7 @@ export class IEEESource extends BaseSource {
     const apiKey = this.getApiKey();
 
     if (!apiKey) {
-      console.warn('IEEE API key not configured. Skipping IEEE source.');
+      logger.warn('IEEE API key not configured. Skipping IEEE source.');
       return [];
     }
 
@@ -79,9 +80,9 @@ export class IEEESource extends BaseSource {
       return this.parseIEEEResponse(response.data.articles);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        console.error('IEEE API authentication failed. Check API key.');
+        logger.error('IEEE API authentication failed. Check API key.');
       } else {
-        console.error('IEEE API error:', error.message);
+        logger.error('IEEE API error:', error.message);
       }
       throw new Error(`Failed to fetch from IEEE: ${error.message}`);
     }

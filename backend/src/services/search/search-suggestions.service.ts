@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 import { redis } from '../../utils/redis';
 
@@ -32,11 +33,11 @@ export class SearchSuggestionsService {
     const cacheKey = `${this.CACHE_PREFIX}:${normalizedQuery}`;
     const cached = await this.getFromCache(cacheKey);
     if (cached) {
-      console.log(`📦 Suggestions cache HIT (q="${normalizedQuery}")`);
+      logger.info(`📦 Suggestions cache HIT (q="${normalizedQuery}")`);
       return cached;
     }
 
-    console.log(`🔍 Suggestions cache MISS - generating suggestions`);
+    logger.info(`🔍 Suggestions cache MISS - generating suggestions`);
 
     // Combine suggestions from multiple sources
     const suggestions: SearchSuggestion[] = [];
@@ -98,7 +99,7 @@ export class SearchSuggestionsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching personal suggestions:', error);
+      logger.error('Error fetching personal suggestions:', error);
       return [];
     }
   }
@@ -146,7 +147,7 @@ export class SearchSuggestionsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching popular suggestions:', error);
+      logger.error('Error fetching popular suggestions:', error);
       return [];
     }
   }
@@ -204,7 +205,7 @@ export class SearchSuggestionsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching content suggestions:', error);
+      logger.error('Error fetching content suggestions:', error);
       return [];
     }
   }
@@ -236,7 +237,7 @@ export class SearchSuggestionsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
+      logger.error('Error fetching tag suggestions:', error);
       return [];
     }
   }
@@ -268,11 +269,11 @@ export class SearchSuggestionsService {
       const cacheKey = `${this.CACHE_PREFIX}:trending:${limit}`;
       const cached = await this.getFromCache(cacheKey);
       if (cached) {
-        console.log('📦 Trending searches cache HIT');
+        logger.info('📦 Trending searches cache HIT');
         return cached;
       }
 
-      console.log('🔍 Trending searches cache MISS - calculating');
+      logger.info('🔍 Trending searches cache MISS - calculating');
 
       // TODO: Uncomment when Prisma is generated
       /*
@@ -308,7 +309,7 @@ export class SearchSuggestionsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching trending searches:', error);
+      logger.error('Error fetching trending searches:', error);
       return [];
     }
   }
@@ -321,7 +322,7 @@ export class SearchSuggestionsService {
       const value = await redis.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
-      console.error('Cache get error:', error);
+      logger.error('Cache get error:', error);
       return null;
     }
   }
@@ -333,7 +334,7 @@ export class SearchSuggestionsService {
     try {
       await redis.setex(key, this.CACHE_TTL, JSON.stringify(value));
     } catch (error) {
-      console.error('Cache set error:', error);
+      logger.error('Cache set error:', error);
     }
   }
 
@@ -347,10 +348,10 @@ export class SearchSuggestionsService {
 
       if (keys.length > 0) {
         await redis.del(...keys);
-        console.log(`🗑️ Cleared ${keys.length} suggestion cache entries`);
+        logger.info(`🗑️ Cleared ${keys.length} suggestion cache entries`);
       }
     } catch (error) {
-      console.error('Error clearing suggestion cache:', error);
+      logger.error('Error clearing suggestion cache:', error);
     }
   }
 }

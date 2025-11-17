@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 
 export interface SearchHistoryEntry {
@@ -29,9 +30,9 @@ export class SearchHistoryService {
       });
       */
 
-      console.log(`📝 Search recorded: user=${userId}, query="${query}", results=${resultsCount}`);
+      logger.info(`📝 Search recorded: user=${userId}, query="${query}", results=${resultsCount}`);
     } catch (error) {
-      console.error('Error recording search:', error);
+      logger.error('Error recording search:', error);
       // Don't throw - search history is non-critical
     }
   }
@@ -61,7 +62,7 @@ export class SearchHistoryService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching search history:', error);
+      logger.error('Error fetching search history:', error);
       return [];
     }
   }
@@ -87,7 +88,7 @@ export class SearchHistoryService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching recent searches:', error);
+      logger.error('Error fetching recent searches:', error);
       return [];
     }
   }
@@ -104,9 +105,9 @@ export class SearchHistoryService {
       });
       */
 
-      console.log(`🗑️ Search history cleared for user=${userId}`);
+      logger.info(`🗑️ Search history cleared for user=${userId}`);
     } catch (error) {
-      console.error('Error clearing search history:', error);
+      logger.error('Error clearing search history:', error);
       throw error;
     }
   }
@@ -126,9 +127,9 @@ export class SearchHistoryService {
       });
       */
 
-      console.log(`🗑️ Search deleted: id=${searchId}, user=${userId}`);
+      logger.info(`🗑️ Search deleted: id=${searchId}, user=${userId}`);
     } catch (error) {
-      console.error('Error deleting search:', error);
+      logger.error('Error deleting search:', error);
       throw error;
     }
   }
@@ -179,7 +180,7 @@ export class SearchHistoryService {
         topSearches: [],
       };
     } catch (error) {
-      console.error('Error fetching search analytics:', error);
+      logger.error('Error fetching search analytics:', error);
       return {
         totalSearches: 0,
         uniqueQueries: 0,

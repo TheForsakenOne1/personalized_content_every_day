@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
 import { trendingCache } from './cache/trending.cache';
@@ -271,11 +272,11 @@ export class ContentService {
     // Try to get from cache first
     const cached = await trendingCache.get(days, limit);
     if (cached) {
-      console.log(`📦 Trending cache HIT (${days}d, limit=${limit})`);
+      logger.info(`📦 Trending cache HIT (${days}d, limit=${limit})`);
       return cached;
     }
 
-    console.log(`🔍 Trending cache MISS (${days}d, limit=${limit}) - fetching from DB`);
+    logger.info(`🔍 Trending cache MISS (${days}d, limit=${limit}) - fetching from DB`);
 
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - days);
@@ -318,11 +319,11 @@ export class ContentService {
     // Try to get from cache first
     const cached = await searchCache.get(query, limit);
     if (cached) {
-      console.log(`📦 Search cache HIT (q="${query}", limit=${limit})`);
+      logger.info(`📦 Search cache HIT (q="${query}", limit=${limit})`);
       return cached;
     }
 
-    console.log(`🔍 Search cache MISS (q="${query}", limit=${limit}) - fetching from DB`);
+    logger.info(`🔍 Search cache MISS (q="${query}", limit=${limit}) - fetching from DB`);
 
     const content = await prisma.content.findMany({
       where: {

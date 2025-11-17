@@ -1,3 +1,4 @@
+import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 
@@ -66,7 +67,7 @@ export class ArxivSource extends BaseSource {
 
       return entries;
     } catch (error) {
-      console.error('arXiv API error:', error);
+      logger.error('arXiv API error:', error);
       throw new Error(`Failed to fetch from arXiv: ${error.message}`);
     }
   }

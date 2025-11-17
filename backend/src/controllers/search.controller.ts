@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { enhancedSearchService, AdvancedSearchFilters } from '../services/search/enhanced-search.service';
 import { searchSuggestionsService } from '../services/search/search-suggestions.service';
 import { searchHistoryService } from '../services/search/search-history.service';
+import logger from '../utils/logger';
+import { API_LIMITS, HTTP_STATUS } from '../constants';
 
 export class SearchController {
   /**
@@ -35,7 +37,10 @@ export class SearchController {
 
       // Pagination
       const page = Number(req.query.page) || 1;
-      const limit = Math.min(Number(req.query.limit) || 20, 100); // Cap at 100
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.DEFAULT_PAGE_SIZE,
+        API_LIMITS.MAX_PAGE_SIZE
+      );
 
       // Perform search
       const results = await enhancedSearchService.search(filters, userId, page, limit);
@@ -45,8 +50,8 @@ export class SearchController {
         data: results,
       });
     } catch (error: any) {
-      console.error('Search error:', error);
-      res.status(500).json({
+      logger.error('Search failed', { error: error.message, query: req.body.query });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Search failed',
         error: error.message,
@@ -62,7 +67,10 @@ export class SearchController {
     try {
       const query = (req.query.q as string) || '';
       const userId = (req as any).user?.id;
-      const limit = Math.min(Number(req.query.limit) || 10, 20); // Cap at 20
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.MAX_AUTOCOMPLETE_RESULTS,
+        API_LIMITS.MAX_SEARCH_SUGGESTIONS
+      );
 
       const suggestions = await searchSuggestionsService.getSuggestions(query, userId, limit);
 
@@ -71,8 +79,8 @@ export class SearchController {
         data: suggestions,
       });
     } catch (error: any) {
-      console.error('Suggestions error:', error);
-      res.status(500).json({
+      logger.error('Failed to get search suggestions', { error: error.message, query: req.query.q });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get suggestions',
         error: error.message,
@@ -86,7 +94,10 @@ export class SearchController {
    */
   async getTrendingSearches(req: Request, res: Response) {
     try {
-      const limit = Math.min(Number(req.query.limit) || 10, 20);
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.MAX_AUTOCOMPLETE_RESULTS,
+        API_LIMITS.MAX_SEARCH_SUGGESTIONS
+      );
 
       const trending = await searchSuggestionsService.getTrendingSearches(limit);
 
@@ -95,8 +106,8 @@ export class SearchController {
         data: trending,
       });
     } catch (error: any) {
-      console.error('Trending searches error:', error);
-      res.status(500).json({
+      logger.error('Failed to get trending searches', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get trending searches',
         error: error.message,
@@ -113,13 +124,16 @@ export class SearchController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
       }
 
-      const limit = Math.min(Number(req.query.limit) || 20, 100);
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.DEFAULT_PAGE_SIZE,
+        API_LIMITS.MAX_PAGE_SIZE
+      );
 
       const history = await searchHistoryService.getUserSearchHistory(userId, limit);
 
@@ -128,8 +142,8 @@ export class SearchController {
         data: history,
       });
     } catch (error: any) {
-      console.error('Search history error:', error);
-      res.status(500).json({
+      logger.error('Failed to get search history', { userId: (req as any).user?.id, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search history',
         error: error.message,
@@ -146,13 +160,16 @@ export class SearchController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
       }
 
-      const limit = Math.min(Number(req.query.limit) || 10, 20);
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.MAX_AUTOCOMPLETE_RESULTS,
+        API_LIMITS.MAX_SEARCH_SUGGESTIONS
+      );
 
       const searches = await searchHistoryService.getRecentUniqueSearches(userId, limit);
 
@@ -161,8 +178,8 @@ export class SearchController {
         data: searches,
       });
     } catch (error: any) {
-      console.error('Recent searches error:', error);
-      res.status(500).json({
+      logger.error('Failed to get recent searches', { userId: (req as any).user?.id, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get recent searches',
         error: error.message,
@@ -179,7 +196,7 @@ export class SearchController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -192,8 +209,8 @@ export class SearchController {
         message: 'Search history cleared',
       });
     } catch (error: any) {
-      console.error('Clear history error:', error);
-      res.status(500).json({
+      logger.error('Failed to clear search history', { userId: (req as any).user?.id, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to clear search history',
         error: error.message,
@@ -211,7 +228,7 @@ export class SearchController {
       const searchId = req.params.searchId;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -224,8 +241,12 @@ export class SearchController {
         message: 'Search deleted',
       });
     } catch (error: any) {
-      console.error('Delete search error:', error);
-      res.status(500).json({
+      logger.error('Failed to delete search', {
+        userId: (req as any).user?.id,
+        searchId: req.params.searchId,
+        error: error.message
+      });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to delete search',
         error: error.message,
@@ -242,7 +263,7 @@ export class SearchController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -255,8 +276,8 @@ export class SearchController {
         data: analytics,
       });
     } catch (error: any) {
-      console.error('Search analytics error:', error);
-      res.status(500).json({
+      logger.error('Failed to get search analytics', { userId: (req as any).user?.id, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search analytics',
         error: error.message,
@@ -279,8 +300,8 @@ export class SearchController {
         data: facets,
       });
     } catch (error: any) {
-      console.error('Search facets error:', error);
-      res.status(500).json({
+      logger.error('Failed to get search facets', { query: req.query.q, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search facets',
         error: error.message,

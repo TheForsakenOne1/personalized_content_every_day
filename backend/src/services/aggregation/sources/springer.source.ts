@@ -1,3 +1,4 @@
+import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 import { config } from '../../../config';
@@ -33,7 +34,7 @@ export class SpringerSource extends BaseSource {
     const apiKey = this.getApiKey();
 
     if (!apiKey) {
-      console.warn('Springer API key not configured. Skipping Springer source.');
+      logger.warn('Springer API key not configured. Skipping Springer source.');
       return [];
     }
 
@@ -77,9 +78,9 @@ export class SpringerSource extends BaseSource {
       return this.parseSpringerResponse(response.data.records);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        console.error('Springer API authentication failed. Check API key.');
+        logger.error('Springer API authentication failed. Check API key.');
       } else {
-        console.error('Springer API error:', error.message);
+        logger.error('Springer API error:', error.message);
       }
       throw new Error(`Failed to fetch from Springer: ${error.message}`);
     }

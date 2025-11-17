@@ -1,3 +1,4 @@
+import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 
@@ -118,7 +119,7 @@ export class PubMedSource extends BaseSource {
 
       return response.data.esearchresult.idlist || [];
     } catch (error) {
-      console.error('PubMed search error:', error);
+      logger.error('PubMed search error:', error);
       throw new Error(`Failed to search PubMed: ${error.message}`);
     }
   }
@@ -189,7 +190,7 @@ export class PubMedSource extends BaseSource {
 
       return articles;
     } catch (error) {
-      console.error('PubMed fetch details error:', error);
+      logger.error('PubMed fetch details error:', error);
       throw new Error(`Failed to fetch article details from PubMed: ${error.message}`);
     }
   }

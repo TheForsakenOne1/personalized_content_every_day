@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 
 export interface ReadingStats {
@@ -108,7 +109,7 @@ export class AnalyticsService {
         contentReadThisMonth: 0,
       };
     } catch (error) {
-      console.error('Error fetching reading stats:', error);
+      logger.error('Error fetching reading stats:', error);
       throw error;
     }
   }
@@ -214,7 +215,7 @@ export class AnalyticsService {
         streakActive: false,
       };
     } catch (error) {
-      console.error('Error calculating reading streak:', error);
+      logger.error('Error calculating reading streak:', error);
       throw error;
     }
   }
@@ -286,7 +287,7 @@ export class AnalyticsService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching topic breakdown:', error);
+      logger.error('Error fetching topic breakdown:', error);
       throw error;
     }
   }
@@ -430,7 +431,7 @@ export class AnalyticsService {
         activeDays: 0,
       };
     } catch (error) {
-      console.error('Error fetching activity timeline:', error);
+      logger.error('Error fetching activity timeline:', error);
       throw error;
     }
   }
@@ -454,7 +455,7 @@ export class AnalyticsService {
         activity,
       };
     } catch (error) {
-      console.error('Error fetching dashboard analytics:', error);
+      logger.error('Error fetching dashboard analytics:', error);
       throw error;
     }
   }
@@ -537,7 +538,7 @@ export class AnalyticsService {
         averageRating: 0,
       };
     } catch (error) {
-      console.error('Error fetching recommendation metrics:', error);
+      logger.error('Error fetching recommendation metrics:', error);
       throw error;
     }
   }

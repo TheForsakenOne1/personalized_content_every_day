@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 import { searchCache } from '../cache/search.cache';
 import { searchHistoryService } from './search-history.service';
@@ -72,7 +73,7 @@ export class EnhancedSearchService {
     if (!userId) {
       const cached = await searchCache.get(filters.query, limit);
       if (cached && this.filtersMatchCache(filters)) {
-        console.log(`📦 Enhanced search cache HIT (q="${filters.query}")`);
+        logger.info(`📦 Enhanced search cache HIT (q="${filters.query}")`);
         return {
           results: cached,
           total: cached.length,
@@ -83,7 +84,7 @@ export class EnhancedSearchService {
       }
     }
 
-    console.log(`🔍 Enhanced search cache MISS - searching DB`);
+    logger.info(`🔍 Enhanced search cache MISS - searching DB`);
 
     // Build where clause
     const where = this.buildWhereClause(filters);
@@ -100,14 +101,14 @@ export class EnhancedSearchService {
     // Record search in history (async, don't wait)
     if (userId) {
       searchHistoryService.recordSearch(userId, filters.query, total).catch(err => {
-        console.error('Failed to record search:', err);
+        logger.error('Failed to record search:', err);
       });
     }
 
     // Cache results for non-user-specific searches
     if (!userId && total > 0) {
       searchCache.set(filters.query, scoredResults, limit).catch(err => {
-        console.error('Failed to cache search results:', err);
+        logger.error('Failed to cache search results:', err);
       });
     }
 
@@ -199,7 +200,7 @@ export class EnhancedSearchService {
 
       return 0;
     } catch (error) {
-      console.error('Error counting search results:', error);
+      logger.error('Error counting search results:', error);
       return 0;
     }
   }
@@ -264,7 +265,7 @@ export class EnhancedSearchService {
 
       return [];
     } catch (error) {
-      console.error('Error fetching search results:', error);
+      logger.error('Error fetching search results:', error);
       return [];
     }
   }
@@ -476,7 +477,7 @@ export class EnhancedSearchService {
         topTags: [],
       };
     } catch (error) {
-      console.error('Error fetching search facets:', error);
+      logger.error('Error fetching search facets:', error);
       return {
         contentTypes: [],
         sources: [],

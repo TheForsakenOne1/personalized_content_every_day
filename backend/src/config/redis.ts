@@ -1,5 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
 import { config } from './index';
+import logger from '../utils/logger';
+import { REDIS_CONSTANTS } from '../constants';
 
 let redisClient: RedisClientType | null = null;
 
@@ -12,26 +14,30 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
     url: config.redisUrl || 'redis://localhost:6379',
     socket: {
       reconnectStrategy: (retries) => {
-        if (retries > 10) {
-          console.error('Redis: Too many reconnection attempts, giving up');
+        if (retries > REDIS_CONSTANTS.MAX_RECONNECT_ATTEMPTS) {
+          logger.error('Redis: Too many reconnection attempts, giving up', { retries });
           return new Error('Too many reconnection attempts');
         }
         // Exponential backoff: 50ms, 100ms, 200ms, etc.
-        return Math.min(retries * 50, 3000);
+        const delay = Math.min(
+          retries * REDIS_CONSTANTS.RECONNECT_BASE_DELAY_MS,
+          REDIS_CONSTANTS.RECONNECT_MAX_DELAY_MS
+        );
+        return delay;
       },
     },
   });
 
   redisClient.on('error', (err) => {
-    console.error('Redis Client Error:', err);
+    logger.error('Redis Client Error', { error: err.message });
   });
 
   redisClient.on('connect', () => {
-    console.log('✅ Redis connected');
+    logger.info('Redis connected successfully');
   });
 
   redisClient.on('disconnect', () => {
-    console.log('⚠️  Redis disconnected');
+    logger.warn('Redis disconnected');
   });
 
   await redisClient.connect();
@@ -42,6 +48,6 @@ export const getRedisClient = async (): Promise<RedisClientType> => {
 export const closeRedisConnection = async () => {
   if (redisClient && redisClient.isOpen) {
     await redisClient.quit();
-    console.log('Redis connection closed');
+    logger.info('Redis connection closed');
   }
 };
