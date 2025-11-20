@@ -134,7 +134,7 @@ export function TutorialStep({ onComplete, onBack }: TutorialStepProps) {
               onClick={() => setCurrentFeature(index)}
               className={`h-2 rounded-full transition-all ${
                 index === currentFeature
-                  ? "w-8 bg-blue-600"
+                  ? "w-8 bg-pink-600"
                   : "w-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
               }`}
               whileHover={{ scale: 1.2 }}
@@ -222,7 +222,7 @@ export function TutorialStep({ onComplete, onBack }: TutorialStepProps) {
             className={`flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-lg shadow-xl transition-all ${
               currentFeature === tutorialFeatures.length - 1
                 ? "bg-gradient-to-r from-green-600 to-green-700 text-white"
-                : "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                : "bg-gradient-to-r from-pink-600 to-rose-600 text-white"
             }`}
           >
             {currentFeature === tutorialFeatures.length - 1 ? (

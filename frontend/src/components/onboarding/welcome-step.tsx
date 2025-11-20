@@ -59,8 +59,8 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
           className="flex justify-center mb-8"
         >
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-xl opacity-50"></div>
-            <div className="relative bg-gradient-to-br from-blue-600 to-purple-600 p-6 rounded-3xl shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-rose-600 rounded-3xl blur-xl opacity-50"></div>
+            <div className="relative bg-gradient-to-br from-pink-600 to-rose-600 p-6 rounded-3xl shadow-2xl">
               <GraduationCap className="h-16 w-16 text-white" />
             </div>
           </div>
@@ -75,7 +75,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         >
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
             Welcome to{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
               Vidya
             </span>
           </h1>
@@ -126,9 +126,9 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onNext}
-            className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all overflow-hidden"
+            className="group relative px-8 py-4 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <span className="relative flex items-center gap-2">
               Get Started
               <motion.div
