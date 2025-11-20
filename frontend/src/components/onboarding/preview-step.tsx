@@ -78,7 +78,7 @@ export function PreviewStep({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200 }}
-            className="inline-flex p-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl mb-6 shadow-xl"
+            className="inline-flex p-4 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl mb-6 shadow-xl"
           >
             <Eye className="h-8 w-8 text-white" />
           </motion.div>
@@ -184,10 +184,10 @@ export function PreviewStep({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 mb-8"
+          className="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-6 border border-pink-200 dark:border-pink-800 mb-8"
         >
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl shadow-lg">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -222,7 +222,7 @@ export function PreviewStep({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onNext}
-            className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+            className="group px-8 py-4 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
           >
             Continue
             <motion.div

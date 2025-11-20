@@ -37,11 +37,11 @@ export const searchService = {
       limit: limit.toString(),
     });
 
-    const response = await apiClient.get<{ suggestions: SearchSuggestion[] }>(
+    const response = await apiClient.get<{ success: boolean; data: SearchSuggestion[] }>(
       `/api/search/suggestions?${params.toString()}`
     );
 
-    return response.data.suggestions;
+    return response.data;
   },
 
   /**
@@ -64,8 +64,11 @@ export const searchService = {
     if (filters?.offset) params.append('offset', filters.offset.toString());
 
     const response = await apiClient.get<{
-      results: SearchResult[];
-      total: number;
+      success: boolean;
+      data: {
+        results: SearchResult[];
+        total: number;
+      };
     }>(`/api/search?${params.toString()}`);
 
     return response.data;
@@ -75,10 +78,10 @@ export const searchService = {
    * Get trending searches
    */
   async getTrending(limit: number = 10): Promise<string[]> {
-    const response = await apiClient.get<{ searches: string[] }>(
+    const response = await apiClient.get<{ success: boolean; data: string[] }>(
       `/api/search/trending?limit=${limit}`
     );
 
-    return response.data.searches;
+    return response.data;
   },
 };

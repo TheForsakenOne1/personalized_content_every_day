@@ -107,7 +107,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
-            className="inline-flex p-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl mb-6 shadow-xl"
+            className="inline-flex p-4 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl mb-6 shadow-xl"
           >
             <Sparkles className="h-8 w-8 text-white" />
           </motion.div>
@@ -128,7 +128,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
               {selectedTopics.length === 0 ? (
                 "Select at least one topic to continue"
               ) : (
-                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                <span className="text-pink-600 dark:text-pink-400 font-medium">
                   {selectedTopics.length} topic{selectedTopics.length !== 1 && "s"}{" "}
                   selected ✓
                 </span>
@@ -155,7 +155,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
                 className={cn(
                   "relative group p-6 rounded-xl border-2 transition-all text-left overflow-hidden",
                   isSelected
-                    ? "border-blue-500 dark:border-blue-400 shadow-xl shadow-blue-500/20"
+                    ? "border-pink-500 dark:border-pink-400 shadow-xl shadow-pink-500/20"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm"
                 )}
               >
@@ -191,7 +191,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
                           animate={{ scale: 1, rotate: 0 }}
                           exit={{ scale: 0, rotate: 180 }}
                           transition={{ type: "spring", stiffness: 300 }}
-                          className="p-1.5 bg-blue-500 rounded-full shadow-lg"
+                          className="p-1.5 bg-pink-500 rounded-full shadow-lg"
                         >
                           <Check className="h-4 w-4 text-white" />
                         </motion.div>
@@ -226,7 +226,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
                 {isSelected && (
                   <motion.div
                     layoutId="selection-ring"
-                    className="absolute inset-0 border-2 border-blue-500 dark:border-blue-400 rounded-xl"
+                    className="absolute inset-0 border-2 border-pink-500 dark:border-pink-400 rounded-xl"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -259,7 +259,7 @@ export function TopicsStep({ onNext, onBack }: TopicsStepProps) {
             className={cn(
               "group px-8 py-4 rounded-xl font-semibold text-lg shadow-xl transition-all flex items-center gap-2",
               selectedTopics.length > 0
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-2xl"
+                ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white hover:shadow-2xl"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             )}
           >

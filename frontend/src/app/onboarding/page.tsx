@@ -9,6 +9,7 @@ import { TopicsStep } from "@/components/onboarding/topics-step";
 import { PreviewStep } from "@/components/onboarding/preview-step";
 import { TutorialStep } from "@/components/onboarding/tutorial-step";
 import { toast } from "sonner";
+import { userService, categoryService } from "@/services/api";
 
 const TOTAL_STEPS = 4;
 
@@ -48,16 +49,53 @@ export default function OnboardingPage() {
     toast.success(`${topics.length} topics selected!`);
   };
 
-  const handleComplete = () => {
-    completeOnboarding();
-    toast.success("Welcome to Vidya! 🎉", {
-      description: "Your personalized feed is ready.",
-    });
-    router.push("/dashboard");
+  const handleComplete = async () => {
+    try {
+      // Save selected topics to backend
+      if (selectedTopics.length > 0) {
+        // Fetch all categories to map topic names to IDs
+        const categories = await categoryService.getCategories();
+
+        // Map selected topic names to category IDs
+        const categoryIds = selectedTopics
+          .map((topicName) => {
+            const category = categories.find(
+              (cat) => cat.name.toLowerCase() === topicName.toLowerCase()
+            );
+            return category?.id;
+          })
+          .filter((id): id is string => id !== undefined);
+
+        // Save categories to backend
+        if (categoryIds.length > 0) {
+          await userService.updateCategories(categoryIds);
+
+          // Trigger initial content fetching by pre-loading the feed
+          // This will cause the backend to generate recommendations based on selected categories
+          userService.getFeed().catch((err) => {
+            console.error("Failed to pre-load feed:", err);
+          });
+        }
+      }
+
+      completeOnboarding();
+      toast.success("Welcome to Vidya! 🎉", {
+        description: "Your personalized feed is ready.",
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      // Still complete onboarding even if saving fails
+      completeOnboarding();
+      toast.warning("Welcome to Vidya!", {
+        description: "We'll set up your preferences later.",
+      });
+      router.push("/dashboard");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
 
@@ -65,7 +103,7 @@ export default function OnboardingPage() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="h-1 bg-gray-200 dark:bg-gray-700">
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
+            className="h-full bg-gradient-to-r from-pink-600 to-rose-600"
             initial={{ width: 0 }}
             animate={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -144,7 +182,7 @@ export default function OnboardingPage() {
       {/* Animated Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full opacity-10 blur-3xl"
+          className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500 rounded-full opacity-10 blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             x: [0, 50, 0],
@@ -153,7 +191,7 @@ export default function OnboardingPage() {
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full opacity-10 blur-3xl"
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-rose-500 rounded-full opacity-10 blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             x: [0, -50, 0],
