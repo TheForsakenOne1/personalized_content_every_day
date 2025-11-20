@@ -27,6 +27,9 @@ dotenv.config();
 const app: Application = express();
 const httpServer = createServer(app);
 
+// Trust proxy - Required for rate limiting behind Render's proxy
+app.set('trust proxy', true);
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: {

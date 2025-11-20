@@ -40,8 +40,8 @@ export const config = {
   smtpPassword: process.env.SMTP_PASSWORD || '',
   emailFrom: process.env.EMAIL_FROM || 'noreply@example.com',
 
-  // CORS
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  // CORS - Remove trailing slashes to prevent CORS errors
+  corsOrigin: (process.env.CORS_ORIGIN || 'http://localhost:3000').replace(/\/+$/, ''),
 
   // Rate limiting
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
