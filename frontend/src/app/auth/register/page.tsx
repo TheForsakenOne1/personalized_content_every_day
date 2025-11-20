@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/store/authStore";
+import { useOnboardingStore } from "@/store/onboardingStore";
 
 const registerSchema = z
   .object({
@@ -47,6 +48,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { setUser } = useAuthStore();
+  const { resetOnboarding } = useOnboardingStore();
 
   const {
     register,
@@ -82,11 +84,14 @@ export default function RegisterPage() {
       localStorage.setItem("accessToken", authResponse.accessToken);
       setUser(authResponse.user);
 
+      // Step 4: Reset onboarding state for fresh start
+      resetOnboarding();
+
       toast.success("Welcome to Vidya! 🎉", {
         description: "Let's personalize your experience.",
       });
 
-      // Step 4: Redirect to onboarding
+      // Step 5: Redirect to onboarding
       setTimeout(() => router.push("/onboarding"), 1000);
     } catch (error) {
       toast.error("Registration failed", {
