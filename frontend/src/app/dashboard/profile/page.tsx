@@ -1,12 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { useAuthStore } from "@/store/authStore";
+import { userService } from "@/services/api";
+import type { UserStats } from "@/services/api/user.service";
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await userService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch user stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <ProtectedRoute>
@@ -73,29 +93,29 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-6 border border-pink-100 dark:border-pink-900/30">
                 <div className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
-                  127
+                  {loading ? '...' : (stats?.totalRead || 0)}
                 </div>
                 <div className="text-sm text-pink-600 dark:text-pink-400 font-medium">
                   Items read
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  +12 this week
+                  {loading ? '...' : `${stats?.readToday || 0} today`}
                 </div>
               </div>
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-900/30">
                 <div className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
-                  34
+                  {loading ? '...' : (stats?.totalSaved || 0)}
                 </div>
                 <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">
                   Bookmarks
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  6 unread
+                  Saved content
                 </div>
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-950/20 dark:to-pink-950/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/30">
                 <div className="text-3xl font-semibold text-gray-900 dark:text-white mb-1">
-                  42
+                  {user?.createdAt ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 0}
                 </div>
                 <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
                   Days active
