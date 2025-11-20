@@ -137,7 +137,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
                 <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  45
+                  {loading ? '...' : (stats?.contentTypeBreakdown?.article || 0)}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Articles
@@ -145,7 +145,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
                 <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  28
+                  {loading ? '...' : (stats?.contentTypeBreakdown?.video || 0)}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Videos
@@ -153,7 +153,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
                 <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  54
+                  {loading ? '...' : (stats?.contentTypeBreakdown?.paper || 0)}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Papers
@@ -161,7 +161,9 @@ export default function ProfilePage() {
               </div>
               <div className="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
                 <div className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  23h
+                  {loading ? '...' : stats?.totalReadingTimeMinutes
+                    ? `${Math.floor(stats.totalReadingTimeMinutes / 60)}h ${stats.totalReadingTimeMinutes % 60}m`
+                    : '0m'}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Total Time
@@ -175,27 +177,29 @@ export default function ProfilePage() {
             <h2 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
               Top Interests
             </h2>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { name: "Astronomy", count: 34 },
-                { name: "History", count: 28 },
-                { name: "Technology", count: 25 },
-                { name: "Geopolitics", count: 21 },
-                { name: "Climate Science", count: 19 },
-              ].map((interest) => (
-                <div
-                  key={interest.name}
-                  className="px-4 py-2 bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-950/30 dark:to-rose-950/30 rounded-full border border-pink-200 dark:border-pink-900/50"
-                >
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {interest.name}
-                  </span>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 ml-2">
-                    {interest.count}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+            ) : stats?.topCategories && stats.topCategories.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {stats.topCategories.map((interest) => (
+                  <div
+                    key={interest.name}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-950/30 dark:to-rose-950/30 rounded-full border border-pink-200 dark:border-pink-900/50"
+                  >
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {interest.name}
+                    </span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 ml-2">
+                      {interest.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-600 dark:text-gray-400">
+                No interests yet. Start reading to build your interests!
+              </div>
+            )}
           </div>
         </motion.div>
       </DashboardLayout>

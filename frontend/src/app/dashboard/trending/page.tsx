@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentItem } from "@/components/dashboard/content-card";
-import { Flame, Clock } from "lucide-react";
+import { Flame, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { contentService } from "@/services/api";
 
 const mockTrending: ContentItem[] = [
   {
@@ -107,6 +109,28 @@ const mockTrending: ContentItem[] = [
 ];
 
 export default function TrendingPage() {
+  const [trending, setTrending] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const data = await contentService.getTrendingContent(7, 20); // Last 7 days, max 20 items
+        setTrending(data);
+      } catch (error) {
+        console.error('Failed to fetch trending content:', error);
+        // Fallback to mock data if API fails
+        setTrending(mockTrending);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrending();
+  }, []);
+
+  const displayContent = trending.length > 0 ? trending : mockTrending;
+
   return (
     <ProtectedRoute>
       <DashboardLayout>
@@ -130,8 +154,17 @@ export default function TrendingPage() {
           </div>
 
           {/* Trending Content List */}
-          <div className="space-y-3">
-            {mockTrending.map((item, index) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+            </div>
+          ) : displayContent.length === 0 ? (
+            <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+              No trending content available at the moment.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {displayContent.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, x: -10 }}
@@ -176,7 +209,8 @@ export default function TrendingPage() {
                 </Link>
               </motion.div>
             ))}
-          </div>
+            </div>
+          )}
         </motion.div>
       </DashboardLayout>
     </ProtectedRoute>

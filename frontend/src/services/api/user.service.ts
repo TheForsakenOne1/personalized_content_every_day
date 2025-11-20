@@ -38,6 +38,17 @@ export interface UserStats {
   totalRead: number;
   totalSaved: number;
   readToday: number;
+  contentTypeBreakdown: {
+    article: number;
+    video: number;
+    paper: number;
+    blog: number;
+  };
+  totalReadingTimeMinutes: number;
+  topCategories: Array<{
+    name: string;
+    count: number;
+  }>;
   streakDays?: number;
 }
 

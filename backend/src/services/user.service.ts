@@ -409,7 +409,7 @@ export class UserService {
   }
 
   async getUserStats(userId: string) {
-    const [totalRead, totalSaved, readToday] = await Promise.all([
+    const [totalRead, totalSaved, readToday, readContent, userCategories] = await Promise.all([
       prisma.userContentInteraction.count({
         where: {
           userId,
@@ -431,12 +431,101 @@ export class UserService {
           },
         },
       }),
+      // Get all read content with details
+      prisma.userContentInteraction.findMany({
+        where: {
+          userId,
+          status: 'read',
+        },
+        include: {
+          content: {
+            select: {
+              contentType: true,
+              duration: true,
+              wordCount: true,
+              categoryId: true,
+            },
+          },
+        },
+      }),
+      // Get user's selected categories
+      prisma.userCategory.findMany({
+        where: {
+          userId,
+          isActive: true,
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          priority: 'desc',
+        },
+        take: 5,
+      }),
     ]);
+
+    // Calculate content type breakdown
+    const contentTypeBreakdown: Record<string, number> = {};
+    let totalReadingTimeMinutes = 0;
+
+    readContent.forEach((interaction) => {
+      const contentType = interaction.content.contentType;
+      contentTypeBreakdown[contentType] = (contentTypeBreakdown[contentType] || 0) + 1;
+
+      // Calculate reading time
+      if (interaction.content.duration) {
+        // Duration is in seconds for videos
+        totalReadingTimeMinutes += Math.ceil(interaction.content.duration / 60);
+      } else if (interaction.content.wordCount) {
+        // Average reading speed: 200-250 words per minute
+        totalReadingTimeMinutes += Math.ceil(interaction.content.wordCount / 225);
+      }
+    });
+
+    // Calculate category breakdown
+    const categoryBreakdown: Record<string, number> = {};
+    readContent.forEach((interaction) => {
+      const categoryId = interaction.content.categoryId;
+      categoryBreakdown[categoryId] = (categoryBreakdown[categoryId] || 0) + 1;
+    });
+
+    // Get top categories with names
+    const topCategories = await Promise.all(
+      Object.entries(categoryBreakdown)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(async ([categoryId, count]) => {
+          const category = await prisma.category.findUnique({
+            where: { id: categoryId },
+            select: { name: true },
+          });
+          return {
+            name: category?.name || 'Unknown',
+            count,
+          };
+        })
+    );
 
     return {
       totalRead,
       totalSaved,
       readToday,
+      contentTypeBreakdown: {
+        article: contentTypeBreakdown.article || 0,
+        video: contentTypeBreakdown.video || 0,
+        paper: contentTypeBreakdown.paper || 0,
+        blog: contentTypeBreakdown.blog || 0,
+      },
+      totalReadingTimeMinutes,
+      topCategories: topCategories.length > 0 ? topCategories : userCategories.map(uc => ({
+        name: uc.category.name,
+        count: 0,
+      })),
     };
   }
 }
