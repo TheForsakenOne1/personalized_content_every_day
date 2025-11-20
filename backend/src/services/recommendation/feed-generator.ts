@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { ScoredContent } from './recommendation.service';
 
 /**

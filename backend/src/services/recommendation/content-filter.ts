@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 /**
  * Content-Based Filtering
  * "Because you liked X, you might like Y (similar content)"
@@ -34,7 +35,7 @@ export class ContentBasedFilter {
       const avgSimilarity = totalSimilarity / comparisons;
       return avgSimilarity * 10;
     } catch (error) {
-      console.error('Content-based filtering error:', error);
+      logger.error('Content-based filtering error:', error);
       return 5; // Default score on error
     }
   }

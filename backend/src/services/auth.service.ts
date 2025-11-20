@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { hashPassword, comparePassword, validatePasswordStrength } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
@@ -244,8 +245,8 @@ export class AuthService {
     });
 
     // TODO: Send password reset email with resetToken
-    // In production, send email. For development, log the token
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // In production, send email. For development only, uncomment below:
+    // logger.info(`Password reset token for ${email}: ${resetToken}`);
 
     return { message: 'If the email exists, a reset link will be sent' };
   }
@@ -334,8 +335,8 @@ export class AuthService {
     });
 
     // TODO: Send verification email with verificationToken
-    // In production, send email. For development, log the token
-    console.log(`Email verification token for ${user.email}: ${verificationToken}`);
+    // In production, send email. For development only, uncomment below:
+    // logger.info(`Email verification token for ${user.email}: ${verificationToken}`);
 
     return { message: 'Verification email sent' };
   }

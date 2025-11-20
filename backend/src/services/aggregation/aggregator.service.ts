@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { BaseSource, NormalizedContent } from './base.source';
 import { qualityScorer } from './quality-scorer.service';
 import { arxivSource } from './sources/arxiv.source';
@@ -31,7 +32,7 @@ export class AggregatorService {
    */
   registerSource(source: BaseSource) {
     this.sources.set(source.sourceType, source);
-    console.log(`✅ Registered source: ${source.name}`);
+    logger.info(`✅ Registered source: ${source.name}`);
   }
 
   /**
@@ -60,7 +61,7 @@ export class AggregatorService {
 
     for (const source of this.sources.values()) {
       try {
-        console.log(`Fetching from ${source.name}...`);
+        logger.info(`Fetching from ${source.name}...`);
 
         const content = await source.fetch({
           category: options?.category,
@@ -70,7 +71,7 @@ export class AggregatorService {
 
         allContent.push(...content);
       } catch (error) {
-        console.error(`Error fetching from ${source.name}:`, error);
+        logger.error(`Error fetching from ${source.name}:`, error);
       }
     }
 
@@ -106,7 +107,7 @@ export class AggregatorService {
    * This is the main method called by the scheduler
    */
   async aggregateForCategory(categoryId: string, categoryName: string): Promise<AggregationResult> {
-    console.log(`\n🔄 Aggregating content for category: ${categoryName}`);
+    logger.info(`\n🔄 Aggregating content for category: ${categoryName}`);
 
     const result: AggregationResult = {
       source: 'all',
@@ -126,7 +127,7 @@ export class AggregatorService {
       result.fetched = content.length;
 
       if (content.length === 0) {
-        console.log(`No content fetched for ${categoryName}`);
+        logger.info(`No content fetched for ${categoryName}`);
         return result;
       }
 
@@ -136,7 +137,7 @@ export class AggregatorService {
       // Filter by quality threshold (0.5 or higher)
       const qualityContent = scoredContent.filter(c => c.qualityScore >= 0.5);
 
-      console.log(`Quality filtered: ${qualityContent.length}/${scoredContent.length} items`);
+      logger.info(`Quality filtered: ${qualityContent.length}/${scoredContent.length} items`);
 
       // Save to database (TODO: Implement when Prisma is working)
       for (const item of qualityContent) {
@@ -165,24 +166,24 @@ export class AggregatorService {
           */
 
           result.saved++;
-          console.log(`✅ Saved: ${item.title.substring(0, 60)}...`);
+          logger.info(`✅ Saved: ${item.title.substring(0, 60)}...`);
         } catch (error) {
-          console.error(`Error saving content:`, error);
+          logger.error(`Error saving content:`, error);
           result.errors++;
         }
       }
 
       result.skipped = result.fetched - result.saved - result.errors;
 
-      console.log(`✅ Aggregation complete for ${categoryName}:`);
-      console.log(`   Fetched: ${result.fetched}`);
-      console.log(`   Saved: ${result.saved}`);
-      console.log(`   Skipped: ${result.skipped}`);
-      console.log(`   Errors: ${result.errors}`);
+      logger.info(`✅ Aggregation complete for ${categoryName}:`);
+      logger.info(`   Fetched: ${result.fetched}`);
+      logger.info(`   Saved: ${result.saved}`);
+      logger.info(`   Skipped: ${result.skipped}`);
+      logger.info(`   Errors: ${result.errors}`);
 
       return result;
     } catch (error) {
-      console.error(`Error aggregating for ${categoryName}:`, error);
+      logger.error(`Error aggregating for ${categoryName}:`, error);
       result.errors++;
       return result;
     }
@@ -192,7 +193,7 @@ export class AggregatorService {
    * Aggregate content for all categories
    */
   async aggregateAll(): Promise<AggregationResult[]> {
-    console.log('\n🚀 Starting content aggregation for all categories...\n');
+    logger.info('\n🚀 Starting content aggregation for all categories...\n');
 
     // TODO: Fetch categories from database when Prisma is working
     const categories = [
@@ -213,7 +214,7 @@ export class AggregatorService {
       await this.delay(2000); // 2 second delay between categories
     }
 
-    console.log('\n✅ Aggregation complete for all categories\n');
+    logger.info('\n✅ Aggregation complete for all categories\n');
 
     return results;
   }
@@ -235,10 +236,10 @@ export class AggregatorService {
       try {
         const isAvailable = await source.isAvailable();
         health[source.name] = isAvailable;
-        console.log(`${source.name}: ${isAvailable ? '✅ Available' : '❌ Unavailable'}`);
+        logger.info(`${source.name}: ${isAvailable ? '✅ Available' : '❌ Unavailable'}`);
       } catch (error) {
         health[source.name] = false;
-        console.log(`${source.name}: ❌ Error`);
+        logger.info(`${source.name}: ❌ Error`);
       }
     }
 

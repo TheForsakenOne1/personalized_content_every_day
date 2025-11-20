@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import nodemailer from 'nodemailer';
 import { config } from '../../config';
 
@@ -51,9 +52,9 @@ export class EmailService {
       });
       */
 
-      console.log('📧 Email service initialized (mock mode)');
+      logger.info('📧 Email service initialized (mock mode)');
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      logger.error('Failed to initialize email service:', error);
     }
   }
 
@@ -77,9 +78,9 @@ export class EmailService {
       });
       */
 
-      console.log(`📧 Email sent (mock): ${options.subject} to ${options.to}`);
+      logger.info(`📧 Email sent (mock): ${options.subject} to ${options.to}`);
     } catch (error) {
-      console.error('Email send error:', error);
+      logger.error('Email send error:', error);
       throw error;
     }
   }

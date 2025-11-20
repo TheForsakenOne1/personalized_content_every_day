@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import logger from '../utils/logger';
+import { HTTP_STATUS } from '../constants';
 
 export interface ApiError extends Error {
   statusCode?: number;
@@ -11,13 +13,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   const message = err.message || 'Internal Server Error';
 
-  console.error('Error:', {
+  logger.error('Request error', {
     message: err.message,
     stack: err.stack,
     statusCode,
+    path: req.path,
+    method: req.method,
   });
 
   res.status(statusCode).json({

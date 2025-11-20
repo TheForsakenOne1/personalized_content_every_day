@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 
 /**
@@ -41,7 +42,7 @@ export class CollaborativeFilter {
       // Normalize to 0-15
       return Math.min(Math.max(score, 0), 15);
     } catch (error) {
-      console.error('Collaborative filtering error:', error);
+      logger.error('Collaborative filtering error:', error);
       return 5; // Default score on error
     }
   }

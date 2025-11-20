@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
 

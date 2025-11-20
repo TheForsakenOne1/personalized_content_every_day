@@ -10,6 +10,7 @@ import { config } from './config';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
+import logger from './utils/logger';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -27,14 +28,23 @@ const app: Application = express();
 const httpServer = createServer(app);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
 app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
 }));
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' })); // Limit request body size
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Limit request body size
 app.use(cookieParser());
 
 // Rate limiting
@@ -62,16 +72,18 @@ app.use(errorHandler);
 const PORT = config.port || 4000;
 
 httpServer.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📝 Environment: ${config.nodeEnv}`);
-  console.log(`🔗 CORS origin: ${config.corsOrigin}`);
+  logger.info('Server started successfully', {
+    port: PORT,
+    environment: config.nodeEnv,
+    corsOrigin: config.corsOrigin,
+  });
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+  logger.info('SIGTERM signal received: closing HTTP server');
   httpServer.close(() => {
-    console.log('HTTP server closed');
+    logger.info('HTTP server closed gracefully');
     process.exit(0);
   });
 });

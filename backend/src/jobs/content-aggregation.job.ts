@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import cron from 'node-cron';
 import { aggregatorService } from '../services/aggregation/aggregator.service';
 
@@ -11,23 +12,23 @@ export class ContentAggregationJob {
    */
   start(schedule: string = '0 */6 * * *') {
     if (this.task) {
-      console.log('⚠️  Content aggregation job is already running');
+      logger.info('⚠️  Content aggregation job is already running');
       return;
     }
 
-    console.log(`📅 Scheduling content aggregation job: ${schedule}`);
-    console.log('   Schedule: Every 6 hours');
+    logger.info(`📅 Scheduling content aggregation job: ${schedule}`);
+    logger.info('   Schedule: Every 6 hours');
 
     this.task = cron.schedule(schedule, async () => {
       if (this.isRunning) {
-        console.log('⚠️  Content aggregation already in progress, skipping...');
+        logger.info('⚠️  Content aggregation already in progress, skipping...');
         return;
       }
 
       await this.run();
     });
 
-    console.log('✅ Content aggregation job scheduled');
+    logger.info('✅ Content aggregation job scheduled');
   }
 
   /**
@@ -37,7 +38,7 @@ export class ContentAggregationJob {
     if (this.task) {
       this.task.stop();
       this.task = null;
-      console.log('🛑 Content aggregation job stopped');
+      logger.info('🛑 Content aggregation job stopped');
     }
   }
 
@@ -47,23 +48,23 @@ export class ContentAggregationJob {
   async run() {
     this.isRunning = true;
 
-    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 Starting content aggregation job');
-    console.log(`⏰ Time: ${new Date().toISOString()}`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    logger.info('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    logger.info('🔄 Starting content aggregation job');
+    logger.info(`⏰ Time: ${new Date().toISOString()}`);
+    logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     try {
       // Check sources health first
-      console.log('🏥 Checking sources health...\n');
+      logger.info('🏥 Checking sources health...\n');
       const health = await aggregatorService.checkSourcesHealth();
 
       const availableSources = Object.values(health).filter(h => h).length;
       const totalSources = Object.keys(health).length;
 
-      console.log(`\n✅ ${availableSources}/${totalSources} sources available\n`);
+      logger.info(`\n✅ ${availableSources}/${totalSources} sources available\n`);
 
       if (availableSources === 0) {
-        console.log('❌ No sources available, skipping aggregation');
+        logger.info('❌ No sources available, skipping aggregation');
         return;
       }
 
@@ -81,17 +82,17 @@ export class ContentAggregationJob {
         { fetched: 0, saved: 0, skipped: 0, errors: 0 }
       );
 
-      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 Aggregation Summary');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`Total Fetched: ${totals.fetched}`);
-      console.log(`Total Saved:   ${totals.saved}`);
-      console.log(`Total Skipped: ${totals.skipped}`);
-      console.log(`Total Errors:  ${totals.errors}`);
-      console.log(`Success Rate:  ${totals.fetched > 0 ? ((totals.saved / totals.fetched) * 100).toFixed(1) : 0}%`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      logger.info('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      logger.info('📊 Aggregation Summary');
+      logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      logger.info(`Total Fetched: ${totals.fetched}`);
+      logger.info(`Total Saved:   ${totals.saved}`);
+      logger.info(`Total Skipped: ${totals.skipped}`);
+      logger.info(`Total Errors:  ${totals.errors}`);
+      logger.info(`Success Rate:  ${totals.fetched > 0 ? ((totals.saved / totals.fetched) * 100).toFixed(1) : 0}%`);
+      logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-      console.log(`✅ Content aggregation job completed at ${new Date().toISOString()}\n`);
+      logger.info(`✅ Content aggregation job completed at ${new Date().toISOString()}\n`);
     } catch (error) {
       console.error('\n❌ Content aggregation job failed:', error);
       console.error('Stack trace:', (error as any)?.stack);
@@ -117,7 +118,7 @@ export const contentAggregationJob = new ContentAggregationJob();
 export const initializeContentAggregation = (autoStart: boolean = true) => {
   if (autoStart) {
     // Run immediately on startup (useful for testing)
-    console.log('🚀 Running initial content aggregation...');
+    logger.info('🚀 Running initial content aggregation...');
     contentAggregationJob.run();
 
     // Then schedule for every 6 hours

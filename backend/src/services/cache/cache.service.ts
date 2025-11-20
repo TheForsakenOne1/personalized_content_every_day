@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { getRedisClient } from '../../config/redis';
 import { RedisClientType } from 'redis';
 
@@ -15,7 +16,7 @@ export class CacheService {
       this.isConnected = true;
       return this.client;
     } catch (error) {
-      console.error('Failed to connect to Redis:', error);
+      logger.error('Failed to connect to Redis:', error);
       this.isConnected = false;
       return null;
     }
@@ -31,7 +32,7 @@ export class CacheService {
 
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error(`Cache get error for key ${key}:`, error);
+      logger.error(`Cache get error for key ${key}:`, error);
       return null;
     }
   }
@@ -51,7 +52,7 @@ export class CacheService {
 
       return true;
     } catch (error) {
-      console.error(`Cache set error for key ${key}:`, error);
+      logger.error(`Cache set error for key ${key}:`, error);
       return false;
     }
   }
@@ -69,7 +70,7 @@ export class CacheService {
 
       return true;
     } catch (error) {
-      console.error(`Cache delete error for key ${key}:`, error);
+      logger.error(`Cache delete error for key ${key}:`, error);
       return false;
     }
   }
@@ -82,7 +83,7 @@ export class CacheService {
       const exists = await client.exists(key);
       return exists === 1;
     } catch (error) {
-      console.error(`Cache exists error for key ${key}:`, error);
+      logger.error(`Cache exists error for key ${key}:`, error);
       return false;
     }
   }
@@ -98,7 +99,7 @@ export class CacheService {
       await client.del(keys);
       return keys.length;
     } catch (error) {
-      console.error(`Cache invalidate pattern error for ${pattern}:`, error);
+      logger.error(`Cache invalidate pattern error for ${pattern}:`, error);
       return 0;
     }
   }
@@ -110,7 +111,7 @@ export class CacheService {
 
       return await client.ttl(key);
     } catch (error) {
-      console.error(`Cache TTL error for key ${key}:`, error);
+      logger.error(`Cache TTL error for key ${key}:`, error);
       return -2;
     }
   }
@@ -123,7 +124,7 @@ export class CacheService {
       await client.flushDb();
       return true;
     } catch (error) {
-      console.error('Cache flush error:', error);
+      logger.error('Cache flush error:', error);
       return false;
     }
   }
@@ -151,7 +152,7 @@ export class CacheService {
 
       return value;
     } catch (error) {
-      console.error(`Compute function error for key ${key}:`, error);
+      logger.error(`Compute function error for key ${key}:`, error);
       return null;
     }
   }

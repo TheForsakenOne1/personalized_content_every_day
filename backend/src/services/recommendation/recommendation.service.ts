@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import { prisma } from '../../utils/prisma';
 import { collaborativeFilter } from './collaborative-filter';
 import { contentBasedFilter } from './content-filter';
@@ -23,13 +24,13 @@ export class RecommendationService {
   async generateRecommendations(options: RecommendationOptions): Promise<ScoredContent[]> {
     const { userId, limit = 50, excludeRead = true, diversityBoost = true } = options;
 
-    console.log(`📊 Generating recommendations for user ${userId}`);
+    logger.info(`📊 Generating recommendations for user ${userId}`);
 
     // Get user's categories and preferences
     const userProfile = await this.getUserProfile(userId);
 
     if (!userProfile) {
-      console.warn(`User ${userId} not found`);
+      logger.warn(`User ${userId} not found`);
       return [];
     }
 
@@ -37,11 +38,11 @@ export class RecommendationService {
     const candidates = await this.getCandidateContent(userId, userProfile.categoryIds, excludeRead);
 
     if (candidates.length === 0) {
-      console.log('No candidate content found');
+      logger.info('No candidate content found');
       return [];
     }
 
-    console.log(`Found ${candidates.length} candidate items`);
+    logger.info(`Found ${candidates.length} candidate items`);
 
     // Score each candidate using multiple algorithms
     const scored = await this.scoreContent(userId, candidates, userProfile);
@@ -57,7 +58,7 @@ export class RecommendationService {
     // Take top N
     const topRecommendations = ranked.slice(0, limit);
 
-    console.log(`✅ Generated ${topRecommendations.length} recommendations`);
+    logger.info(`✅ Generated ${topRecommendations.length} recommendations`);
 
     return topRecommendations;
   }
@@ -67,7 +68,7 @@ export class RecommendationService {
    * This is stored in the DailyFeed table for caching
    */
   async generateDailyFeed(userId: string): Promise<void> {
-    console.log(`\n🔄 Generating daily feed for user ${userId}`);
+    logger.info(`\n🔄 Generating daily feed for user ${userId}`);
 
     // Generate recommendations
     const recommendations = await this.generateRecommendations({
@@ -78,7 +79,7 @@ export class RecommendationService {
     });
 
     if (recommendations.length === 0) {
-      console.log('No recommendations to save');
+      logger.info('No recommendations to save');
       return;
     }
 
@@ -115,7 +116,7 @@ export class RecommendationService {
     }
     */
 
-    console.log(`✅ Daily feed generated: ${recommendations.length} items`);
+    logger.info(`✅ Daily feed generated: ${recommendations.length} items`);
   }
 
   /**

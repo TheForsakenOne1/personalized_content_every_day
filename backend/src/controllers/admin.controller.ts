@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { aggregatorService } from '../services/aggregation/aggregator.service';
+import logger from '../utils/logger';
+import { API_LIMITS, TIME_CONSTANTS, HTTP_STATUS } from '../constants';
 
 export class AdminController {
   /**
@@ -9,7 +11,8 @@ export class AdminController {
    */
   async getSystemStats(req: Request, res: Response) {
     try {
-      // TODO: Uncomment when Prisma is generated
+      // Note: Full database implementation pending - using placeholder responses
+      // When database is fully configured, uncomment the following:
       /*
       const [
         totalUsers,
@@ -23,7 +26,7 @@ export class AdminController {
         prisma.user.count({
           where: {
             lastLoginAt: {
-              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+              gte: new Date(Date.now() - TIME_CONSTANTS.ONE_DAY_MS * 30), // Last 30 days
             },
           },
         }),
@@ -50,8 +53,8 @@ export class AdminController {
         },
       });
     } catch (error: any) {
-      console.error('System stats error:', error);
-      res.status(500).json({
+      logger.error('Failed to fetch system stats', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch system stats',
         error: error.message,
@@ -66,10 +69,14 @@ export class AdminController {
   async getUsers(req: Request, res: Response) {
     try {
       const page = Number(req.query.page) || 1;
-      const limit = Math.min(Number(req.query.limit) || 20, 100);
+      const limit = Math.min(
+        Number(req.query.limit) || API_LIMITS.DEFAULT_PAGE_SIZE,
+        API_LIMITS.MAX_PAGE_SIZE
+      );
       const skip = (page - 1) * limit;
 
-      // TODO: Uncomment when Prisma is generated
+      // Note: Full database implementation pending - using placeholder responses
+      // When database is fully configured, uncomment the following:
       /*
       const [users, total] = await Promise.all([
         prisma.user.findMany({
@@ -111,8 +118,8 @@ export class AdminController {
         },
       });
     } catch (error: any) {
-      console.error('Get users error:', error);
-      res.status(500).json({
+      logger.error('Failed to fetch users', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch users',
         error: error.message,
@@ -125,11 +132,12 @@ export class AdminController {
    * Toggle user active status
    */
   async toggleUserStatus(req: Request, res: Response) {
-    try {
-      const { userId } = req.params;
-      const { isActive } = req.body;
+    const { userId } = req.params;
+    const { isActive } = req.body;
 
-      // TODO: Uncomment when Prisma is generated
+    try {
+      // Note: Full database implementation pending - using placeholder responses
+      // When database is fully configured, uncomment the following:
       /*
       const user = await prisma.user.update({
         where: { id: userId },
@@ -154,8 +162,8 @@ export class AdminController {
         message: `User ${isActive ? 'activated' : 'deactivated'}`,
       });
     } catch (error: any) {
-      console.error('Toggle user status error:', error);
-      res.status(500).json({
+      logger.error('Failed to update user status', { userId, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to update user status',
         error: error.message,
@@ -178,7 +186,7 @@ export class AdminController {
         });
       } else {
         aggregatorService.aggregateAll().catch((err) => {
-          console.error('Aggregation error:', err);
+          logger.error('Content aggregation failed', { error: err.message });
         });
       }
 
@@ -187,8 +195,8 @@ export class AdminController {
         message: 'Content aggregation started',
       });
     } catch (error: any) {
-      console.error('Trigger aggregation error:', error);
-      res.status(500).json({
+      logger.error('Failed to trigger aggregation', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to trigger aggregation',
         error: error.message,
@@ -201,10 +209,11 @@ export class AdminController {
    * Delete content (moderation)
    */
   async deleteContent(req: Request, res: Response) {
-    try {
-      const { contentId } = req.params;
+    const { contentId } = req.params;
 
-      // TODO: Uncomment when Prisma is generated
+    try {
+      // Note: Full database implementation pending - using placeholder responses
+      // When database is fully configured, uncomment the following:
       /*
       await prisma.content.delete({
         where: { id: contentId },
@@ -221,8 +230,8 @@ export class AdminController {
         message: 'Content deleted',
       });
     } catch (error: any) {
-      console.error('Delete content error:', error);
-      res.status(500).json({
+      logger.error('Failed to delete content', { contentId, error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to delete content',
         error: error.message,
@@ -236,11 +245,11 @@ export class AdminController {
    */
   async getSystemHealth(req: Request, res: Response) {
     try {
-      // TODO: Add actual health checks
-      // - Database connection
-      // - Redis connection
-      // - External API status
-      // - Queue health
+      // Note: Basic health check - can be enhanced with:
+      // - Database connection test
+      // - Redis connection test
+      // - External API status checks
+      // - Queue health monitoring
 
       res.json({
         success: true,
@@ -255,8 +264,8 @@ export class AdminController {
         },
       });
     } catch (error: any) {
-      console.error('System health error:', error);
-      res.status(500).json({
+      logger.error('Health check failed', { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Health check failed',
         error: error.message,

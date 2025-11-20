@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import logger from '../utils/logger';
+import { API_LIMITS, TIME_CONSTANTS, HTTP_STATUS } from '../constants';
 import { analyticsService } from '../services/analytics/analytics.service';
 
 export class AnalyticsController {
@@ -11,7 +13,7 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -24,8 +26,8 @@ export class AnalyticsController {
         data: stats,
       });
     } catch (error: any) {
-      console.error('Reading stats error:', error);
-      res.status(500).json({
+      logger.error('Reading stats error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch reading stats',
         error: error.message,
@@ -42,7 +44,7 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -55,8 +57,8 @@ export class AnalyticsController {
         data: streak,
       });
     } catch (error: any) {
-      console.error('Reading streak error:', error);
-      res.status(500).json({
+      logger.error('Reading streak error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch reading streak',
         error: error.message,
@@ -73,7 +75,7 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -86,8 +88,8 @@ export class AnalyticsController {
         data: breakdown,
       });
     } catch (error: any) {
-      console.error('Topic breakdown error:', error);
-      res.status(500).json({
+      logger.error('Topic breakdown error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch topic breakdown',
         error: error.message,
@@ -104,13 +106,13 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
       }
 
-      const days = Math.min(Number(req.query.days) || 30, 365); // Max 1 year
+      const days = Math.min(Number(req.query.days) || API_LIMITS.DEFAULT_ANALYTICS_DAYS, API_LIMITS.MAX_ANALYTICS_DAYS); // Max 1 year
 
       const activity = await analyticsService.getActivityTimeline(userId, days);
 
@@ -119,8 +121,8 @@ export class AnalyticsController {
         data: activity,
       });
     } catch (error: any) {
-      console.error('Activity timeline error:', error);
-      res.status(500).json({
+      logger.error('Activity timeline error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch activity timeline',
         error: error.message,
@@ -137,7 +139,7 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -150,8 +152,8 @@ export class AnalyticsController {
         data: analytics,
       });
     } catch (error: any) {
-      console.error('Dashboard analytics error:', error);
-      res.status(500).json({
+      logger.error('Dashboard analytics error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch dashboard analytics',
         error: error.message,
@@ -168,7 +170,7 @@ export class AnalyticsController {
       const userId = (req as any).user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: 'Authentication required',
         });
@@ -181,8 +183,8 @@ export class AnalyticsController {
         data: metrics,
       });
     } catch (error: any) {
-      console.error('Recommendation metrics error:', error);
-      res.status(500).json({
+      logger.error('Recommendation metrics error:',  { error: error.message });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch recommendation metrics',
         error: error.message,

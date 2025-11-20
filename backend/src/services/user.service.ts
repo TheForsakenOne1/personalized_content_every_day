@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
 import { hashPassword } from '../utils/password';
@@ -260,11 +261,11 @@ export class UserService {
     // Try to get from cache first
     const cached = await feedCache.get(userId, filter);
     if (cached) {
-      console.log(`📦 Feed cache HIT (user=${userId}, filter=${filter || 'all'})`);
+      logger.info(`📦 Feed cache HIT (user=${userId}, filter=${filter || 'all'})`);
       return cached;
     }
 
-    console.log(`🔍 Feed cache MISS (user=${userId}, filter=${filter || 'all'}) - fetching from DB`);
+    logger.info(`🔍 Feed cache MISS (user=${userId}, filter=${filter || 'all'}) - fetching from DB`);
 
     const userCategories = await prisma.userCategory.findMany({
       where: { userId, isActive: true },
