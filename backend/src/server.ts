@@ -41,8 +41,46 @@ app.use(helmet({
     },
   },
 }));
+// CORS configuration - Allow production and preview URLs from Vercel
+const corsOrigin = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  // Allow requests with no origin (mobile apps, curl, etc.)
+  if (!origin) {
+    return callback(null, true);
+  }
+
+  // Get allowed origins from config
+  const allowedOrigins = config.corsOrigin.split(',').map(o => o.trim());
+
+  // Check if origin matches any allowed origin
+  const isAllowed = allowedOrigins.some(allowed => {
+    // Exact match
+    if (origin === allowed) return true;
+
+    // Allow all Vercel preview URLs for the same app
+    // e.g., if allowed is https://myapp.vercel.app, also allow https://myapp-*.vercel.app
+    if (allowed.includes('.vercel.app')) {
+      const baseApp = allowed.replace('https://', '').split('.')[0];
+      const originWithoutProtocol = origin.replace('https://', '');
+      // Match pattern: myapp.vercel.app OR myapp-*.vercel.app OR myapp-git-*.vercel.app
+      if (originWithoutProtocol === `${baseApp}.vercel.app` ||
+          originWithoutProtocol.startsWith(`${baseApp}-`) && originWithoutProtocol.endsWith('.vercel.app')) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+
+  if (isAllowed) {
+    callback(null, true);
+  } else {
+    logger.warn('CORS blocked origin:', { origin, allowedOrigins });
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
 app.use(cors({
-  origin: config.corsOrigin,
+  origin: corsOrigin,
   credentials: true,
 }));
 app.use(morgan('dev'));
