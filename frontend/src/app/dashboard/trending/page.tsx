@@ -7,7 +7,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentItem } from "@/components/dashboard/content-card";
 import { Flame, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { contentService } from "@/services/api";
+import { contentService, type Content } from "@/services/api";
 
 const mockTrending: ContentItem[] = [
   {
@@ -108,6 +108,27 @@ const mockTrending: ContentItem[] = [
   },
 ];
 
+// Helper function to convert Content to ContentItem
+const convertToContentItem = (content: Content): ContentItem => {
+  return {
+    id: content.id,
+    type: content.contentType as "paper" | "video" | "article",
+    title: content.title,
+    description: content.description || "",
+    source: content.source,
+    author: content.author,
+    publishedAt: content.publishedAt || content.createdAt,
+    thumbnailUrl: content.thumbnailUrl,
+    url: content.url,
+    category: content.category?.name || "General",
+    tags: content.tags?.map(t => t.tag.name) || [],
+    readTime: content.wordCount ? Math.ceil(content.wordCount / 225) : undefined,
+    duration: content.duration,
+    isRead: false, // We don't have this info from trending endpoint
+    isSaved: false, // We don't have this info from trending endpoint
+  };
+};
+
 export default function TrendingPage() {
   const [trending, setTrending] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +137,8 @@ export default function TrendingPage() {
     const fetchTrending = async () => {
       try {
         const data = await contentService.getTrendingContent(7, 20); // Last 7 days, max 20 items
-        setTrending(data);
+        const converted = data.map(convertToContentItem);
+        setTrending(converted);
       } catch (error) {
         console.error('Failed to fetch trending content:', error);
         // Fallback to mock data if API fails
