@@ -98,7 +98,7 @@ export class UserService {
         data: {
           userId,
           contentFrequency: 'daily',
-          preferredContentTypes: ['video', 'article', 'paper', 'blog'],
+          preferredContentTypes: ['video', 'article', 'paper', 'blog'] as any,
           notificationEnabled: true,
           emailDigest: true,
           theme: 'light',
@@ -119,13 +119,14 @@ export class UserService {
       theme?: string;
     }
   ) {
+    // Convert preferredContentTypes to match Prisma Json type
+    const updateData: any = { ...data };
+    const createData: any = { userId, ...data };
+
     const preferences = await prisma.userPreferences.upsert({
       where: { userId },
-      update: data,
-      create: {
-        userId,
-        ...data,
-      },
+      update: updateData,
+      create: createData,
     });
 
     return preferences;
