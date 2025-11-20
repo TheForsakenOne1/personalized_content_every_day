@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -39,7 +39,7 @@ model UserPreferences {
   id                    String   @id @default(uuid())
   userId                String   @unique @map("user_id")
   contentFrequency      String   @default("daily") @map("content_frequency")
-  preferredContentTypes Json     @default("[\"video\", \"article\", \"paper\", \"blog\"]") @map("preferred_content_types")
+  preferredContentTypes String   @default("[\"video\", \"article\", \"paper\", \"blog\"]") @map("preferred_content_types")
   notificationEnabled   Boolean  @default(true) @map("notification_enabled")
   emailDigest           Boolean  @default(true) @map("email_digest")
   theme                 String   @default("light")
@@ -99,9 +99,9 @@ model Content {
   duration        Int?
   wordCount       Int?      @map("word_count")
   language        String    @default("en")
-  metadata        Json      @default("{}")
-  qualityScore    Decimal   @default(0.5) @map("quality_score") @db.Decimal(3, 2)
-  popularityScore Decimal   @default(0) @map("popularity_score") @db.Decimal(10, 2)
+  metadata        String    @default("{}")
+  qualityScore    Float     @default(0.5) @map("quality_score")
+  popularityScore Float     @default(0) @map("popularity_score")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -149,7 +149,7 @@ model UserContentInteraction {
   contentId    String    @map("content_id")
   status       String    @default("unread")
   readAt       DateTime? @map("read_at")
-  readProgress Decimal   @default(0) @map("read_progress") @db.Decimal(3, 2)
+  readProgress Float     @default(0) @map("read_progress")
   timeSpent    Int?      @map("time_spent")
   rating       Int?
   isSaved      Boolean   @default(false) @map("is_saved")
@@ -171,8 +171,8 @@ model DailyFeed {
   id                  String   @id @default(uuid())
   userId              String   @map("user_id")
   contentId           String   @map("content_id")
-  feedDate            DateTime @map("feed_date") @db.Date
-  recommendationScore Decimal  @map("recommendation_score") @db.Decimal(5, 2)
+  feedDate            DateTime @map("feed_date")
+  recommendationScore Float    @map("recommendation_score")
   position            Int
   reason              String?
   createdAt           DateTime @default(now()) @map("created_at")
@@ -196,7 +196,7 @@ model ContentSource {
   fetchFrequency String    @default("daily") @map("fetch_frequency")
   isActive       Boolean   @default(true) @map("is_active")
   lastFetchedAt  DateTime? @map("last_fetched_at")
-  config         Json      @default("{}")
+  config         String    @default("{}")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
@@ -213,7 +213,7 @@ model UserActivityLog {
   activityType String   @map("activity_type")
   entityType   String?  @map("entity_type")
   entityId     String?  @map("entity_id")
-  metadata     Json     @default("{}")
+  metadata     String   @default("{}")
   createdAt    DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
