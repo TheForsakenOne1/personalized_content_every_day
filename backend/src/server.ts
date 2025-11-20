@@ -11,6 +11,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import logger from './utils/logger';
+import { initializeContentAggregation } from './jobs/content-aggregation.job';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -118,6 +119,15 @@ httpServer.listen(PORT, () => {
     environment: config.nodeEnv,
     corsOrigin: config.corsOrigin,
   });
+
+  // Initialize content aggregation job in production
+  if (config.nodeEnv === 'production') {
+    logger.info('🚀 Initializing content aggregation job...');
+    initializeContentAggregation(true); // Run immediately and schedule
+  } else {
+    logger.info('⚠️  Content aggregation disabled in development mode');
+    logger.info('   To enable manually: POST /api/admin/aggregate');
+  }
 });
 
 // Graceful shutdown
