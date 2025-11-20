@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, X, Sparkles } from "lucide-react";
+import { Search, Filter, X, Sparkles, TrendingUp, FileText, Tag } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
+import { searchService, type SearchSuggestion } from "@/services/api";
 
 const mockSearchResults: ContentItem[] = [
   {
@@ -94,10 +95,88 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "article" | "video" | "paper">("all");
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Debounce timer
+  const debounceTimer = useRef<NodeJS.Timeout>();
+
+  // Fetch suggestions when user types
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set new timer for debounced search
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        setLoadingSuggestions(true);
+        const results = await searchService.getSuggestions(searchQuery, 8);
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Failed to fetch suggestions:', error);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setShowResults(query.length > 0);
+    setShowSuggestions(false);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setShowResults(true);
+    setShowSuggestions(false);
+  };
+
+  const getSuggestionIcon = (type: string) => {
+    switch (type) {
+      case 'content':
+        return FileText;
+      case 'tag':
+        return Tag;
+      default:
+        return TrendingUp;
+    }
   };
 
   const filteredResults = mockSearchResults.filter((item) => {
@@ -126,11 +205,25 @@ export default function SearchPage() {
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowResults(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    handleSearch(searchQuery);
+                  }
+                }}
+                onFocus={() => {
+                  if (suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
                 placeholder="Try 'quantum physics', 'climate change', or 'machine learning'..."
                 className="w-full pl-12 pr-12 py-4 border-2 border-gray-200 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-950 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-pink-300 dark:focus:border-pink-700 transition-colors"
               />
@@ -139,12 +232,68 @@ export default function SearchPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setShowResults(false);
+                    setSuggestions([]);
+                    setShowSuggestions(false);
                   }}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors z-10"
                 >
                   <X className="h-5 w-5 text-gray-400" />
                 </button>
               )}
+
+              {/* Suggestions Dropdown */}
+              <AnimatePresence>
+                {showSuggestions && (suggestions.length > 0 || loadingSuggestions) && (
+                  <motion.div
+                    ref={suggestionsRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden z-50"
+                  >
+                    {loadingSuggestions ? (
+                      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                          <span>Searching...</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-2">
+                        {suggestions.map((suggestion, index) => {
+                          const Icon = getSuggestionIcon(suggestion.type);
+                          return (
+                            <motion.button
+                              key={`${suggestion.query}-${index}`}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              onClick={() => handleSuggestionClick(suggestion.query)}
+                              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-pink-50 dark:hover:bg-pink-950/20 transition-colors text-left group"
+                            >
+                              <Icon className="h-4 w-4 text-gray-400 group-hover:text-pink-500 transition-colors flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-gray-900 dark:text-white font-medium truncate">
+                                  {suggestion.query}
+                                </div>
+                                {suggestion.count !== undefined && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {suggestion.count} result{suggestion.count !== 1 ? 's' : ''}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-shrink-0 text-xs text-gray-400 capitalize">
+                                {suggestion.type}
+                              </div>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Filters */}
