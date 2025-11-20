@@ -42,9 +42,9 @@ export class ContentService {
 
     if (filters.search) {
       where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-        { author: { contains: filters.search, mode: 'insensitive' } },
+        { title: { contains: filters.search } },
+        { description: { contains: filters.search } },
+        { author: { contains: filters.search } },
       ];
     }
 
@@ -118,7 +118,7 @@ export class ContentService {
       throw new AppError('Content not found', 404);
     }
 
-    let userInteraction = null;
+    let userInteraction: any = null;
     if (userId) {
       userInteraction = await prisma.userContentInteraction.findUnique({
         where: {
@@ -244,13 +244,21 @@ export class ContentService {
     );
 
     // Create content-tag relationships
-    await prisma.contentTag.createMany({
-      data: tags.map((tag) => ({
-        contentId,
-        tagId: tag.id,
-      })),
-      skipDuplicates: true,
-    });
+    for (const tag of tags) {
+      await prisma.contentTag.upsert({
+        where: {
+          contentId_tagId: {
+            contentId,
+            tagId: tag.id,
+          },
+        },
+        update: {},
+        create: {
+          contentId,
+          tagId: tag.id,
+        },
+      });
+    }
 
     return tags;
   }
@@ -328,9 +336,9 @@ export class ContentService {
     const content = await prisma.content.findMany({
       where: {
         OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-          { author: { contains: query, mode: 'insensitive' } },
+          { title: { contains: query } },
+          { description: { contains: query } },
+          { author: { contains: query } },
         ],
       },
       take: limit,
