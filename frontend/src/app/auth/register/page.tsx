@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/api/auth";
+import { useAuthStore } from "@/store/authStore";
 
 const registerSchema = z
   .object({
@@ -45,6 +46,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useAuthStore();
 
   const {
     register,
@@ -66,13 +68,26 @@ export default function RegisterPage() {
 
     try {
       const { confirmPassword, ...registerData } = data;
+
+      // Step 1: Register the user
       await authApi.register(registerData);
 
-      toast.success("Account created successfully!", {
-        description: "Please check your email for verification.",
+      // Step 2: Automatically log them in
+      const authResponse = await authApi.login({
+        email: registerData.email,
+        password: registerData.password,
       });
 
-      setTimeout(() => router.push("/auth/login"), 2000);
+      // Step 3: Store tokens and user data
+      localStorage.setItem("accessToken", authResponse.accessToken);
+      setUser(authResponse.user);
+
+      toast.success("Welcome to Vidya! 🎉", {
+        description: "Let's personalize your experience.",
+      });
+
+      // Step 4: Redirect to onboarding
+      setTimeout(() => router.push("/onboarding"), 1000);
     } catch (error) {
       toast.error("Registration failed", {
         description:
@@ -124,6 +139,7 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 placeholder="Enter your email"
+                autoComplete="email"
                 {...register("email")}
                 disabled={isLoading}
               />
@@ -146,6 +162,7 @@ export default function RegisterPage() {
                 id="username"
                 type="text"
                 placeholder="Choose a username"
+                autoComplete="username"
                 {...register("username")}
                 disabled={isLoading}
               />
@@ -168,6 +185,7 @@ export default function RegisterPage() {
                 id="fullName"
                 type="text"
                 placeholder="Enter your full name"
+                autoComplete="name"
                 {...register("fullName")}
                 disabled={isLoading}
               />
@@ -181,6 +199,7 @@ export default function RegisterPage() {
                 id="password"
                 type="password"
                 placeholder="Create a password"
+                autoComplete="new-password"
                 {...register("password")}
                 disabled={isLoading}
               />
@@ -203,6 +222,7 @@ export default function RegisterPage() {
                 id="confirmPassword"
                 type="password"
                 placeholder="Confirm your password"
+                autoComplete="new-password"
                 {...register("confirmPassword")}
                 disabled={isLoading}
               />
