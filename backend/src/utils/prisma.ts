@@ -1,9 +1,8 @@
 /**
- * Database client - using custom SQLite adapter
- * This replaces Prisma Client since we couldn't generate it due to network restrictions
+ * Database client - PostgreSQL with Prisma ORM
  */
 
-import { prisma as dbClient } from '../lib/db';
+import { prisma as dbClient } from '../lib/prisma';
 
-// Export the custom database client
+// Export the Prisma database client
 export const prisma = dbClient;

@@ -107,8 +107,8 @@ export class EnhancedSearchService {
 
     // Cache results for non-user-specific searches
     if (!userId && total > 0) {
-      searchCache.set(filters.query, scoredResults, limit).catch(err => {
-        logger.error('Failed to cache search results:', err);
+      searchCache.set(filters.query, limit, scoredResults).catch(err => {
+        console.error('Failed to cache search results:', err);
       });
     }
 

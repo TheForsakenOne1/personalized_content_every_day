@@ -10,11 +10,9 @@ export const generateAccessToken = (userId: string, email: string, username: str
     type: 'access',
   };
 
-  const options: SignOptions = {
+  return jwt.sign(payload, config.jwtSecret, {
     expiresIn: config.jwtAccessExpiry,
-  };
-
-  return jwt.sign(payload, config.jwtSecret, options);
+  } as SignOptions);
 };
 
 export const generateRefreshToken = (userId: string, tokenId: string): string => {
@@ -24,11 +22,9 @@ export const generateRefreshToken = (userId: string, tokenId: string): string =>
     type: 'refresh',
   };
 
-  const options: SignOptions = {
+  return jwt.sign(payload, config.jwtSecret, {
     expiresIn: config.jwtRefreshExpiry,
-  };
-
-  return jwt.sign(payload, config.jwtSecret, options);
+  } as SignOptions);
 };
 
 export const verifyRefreshToken = (token: string): { sub: string; jti: string } => {

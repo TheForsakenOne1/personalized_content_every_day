@@ -35,7 +35,7 @@ export async function retryWithBackoff<T>(
       lastError = error;
 
       // Don't retry on client errors (4xx)
-      if (error.response?.status >= 400 && error.response?.status < 500) {
+      if ((error as any)?.response?.status >= 400 && (error as any)?.response?.status < 500) {
         throw error;
       }
 

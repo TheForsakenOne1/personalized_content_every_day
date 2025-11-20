@@ -32,11 +32,11 @@ export class CollaborativeFilter {
         // Positive interactions
         if (interaction.status === 'read') score += 3;
         if (interaction.isSaved) score += 5;
-        if (interaction.rating >= 4) score += 4;
+        if (interaction.rating && interaction.rating >= 4) score += 4;
         if (interaction.rating === 5) score += 2; // Bonus for 5-star
 
         // Negative interactions
-        if (interaction.rating <= 2) score -= 3;
+        if (interaction.rating && interaction.rating <= 2) score -= 3;
       }
 
       // Normalize to 0-15
@@ -108,7 +108,7 @@ export class CollaborativeFilter {
   /**
    * Get interactions from similar users for specific content
    */
-  private async getSimilarUserInteractions(similarUserIds: string[], contentId: string) {
+  private async getSimilarUserInteractions(similarUserIds: string[], contentId: string): Promise<Array<{ status: string; isSaved: boolean; rating: number | null }>> {
     if (similarUserIds.length === 0) {
       return [];
     }

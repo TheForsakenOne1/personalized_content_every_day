@@ -67,8 +67,8 @@ export class ArxivSource extends BaseSource {
 
       return entries;
     } catch (error) {
-      logger.error('arXiv API error:', error);
-      throw new Error(`Failed to fetch from arXiv: ${error.message}`);
+      console.error('arXiv API error:', error);
+      throw new Error(`Failed to fetch from arXiv: ${(error as any)?.message}`);
     }
   }
 

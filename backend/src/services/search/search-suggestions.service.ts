@@ -332,7 +332,7 @@ export class SearchSuggestionsService {
    */
   private async saveToCache(key: string, value: any): Promise<void> {
     try {
-      await redis.setex(key, this.CACHE_TTL, JSON.stringify(value));
+      await redis.setEx(key, this.CACHE_TTL, JSON.stringify(value));
     } catch (error) {
       logger.error('Cache set error:', error);
     }
@@ -347,8 +347,8 @@ export class SearchSuggestionsService {
       const keys = await redis.keys(pattern);
 
       if (keys.length > 0) {
-        await redis.del(...keys);
-        logger.info(`🗑️ Cleared ${keys.length} suggestion cache entries`);
+        await redis.del(keys);
+        console.log(`🗑️ Cleared ${keys.length} suggestion cache entries`);
       }
     } catch (error) {
       logger.error('Error clearing suggestion cache:', error);
