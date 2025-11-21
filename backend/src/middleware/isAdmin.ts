@@ -18,30 +18,32 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
       });
     }
 
-    // Note: Full database implementation pending
-    // When database is fully configured, uncomment the following:
-    /*
+    // Check if user has admin role in database
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { isAdmin: true },
+      select: {
+        isAdmin: true,
+        email: true,
+        username: true,
+      },
     });
 
-    if (!user || !user.isAdmin) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({
+    if (!user) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
-        message: 'Admin access required',
+        message: 'User not found',
       });
     }
-    */
 
-    // For now, check if user email ends with @admin.vidya.app or is in admin list
-    const user = (req as any).user;
-    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-    const isAdminUser =
-      user.email?.endsWith('@admin.vidya.app') ||
-      adminEmails.includes(user.email);
+    if (!user.isAdmin) {
+      logger.warn('Unauthorized admin access attempt', {
+        userId,
+        email: user.email,
+        username: user.username,
+        path: req.path,
+        method: req.method,
+      });
 
-    if (!isAdminUser) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: 'Admin access required',

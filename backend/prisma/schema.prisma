@@ -17,6 +17,7 @@ model User {
   fullName      String?  @map("full_name")
   avatarUrl     String?  @map("avatar_url")
   emailVerified Boolean  @default(false) @map("email_verified")
+  isAdmin       Boolean  @default(false) @map("is_admin")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   lastLoginAt   DateTime? @map("last_login_at")
