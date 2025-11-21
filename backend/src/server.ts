@@ -13,8 +13,8 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import logger from './utils/logger';
 import { initializeContentAggregation } from './jobs/content-aggregation.job';
+import { initializeEmailDigestJobs } from './jobs/email-digest.job';
 import { validateEnv } from './config/validate-env';
-import { initializeSentry } from './config/sentry';
 import { swaggerSpec } from './config/swagger';
 
 // Routes
@@ -25,15 +25,13 @@ import contentRoutes from './routes/content.routes';
 import searchRoutes from './routes/search.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import adminRoutes from './routes/admin.routes';
+import notificationRoutes from './routes/notification.routes';
 
 // Load environment variables
 dotenv.config();
 
 // Validate environment variables on startup
 validateEnv();
-
-// Initialize Sentry for error tracking
-initializeSentry();
 
 const app: Application = express();
 const httpServer = createServer(app);
@@ -128,6 +126,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling
 app.use(notFoundHandler);
@@ -147,9 +146,13 @@ httpServer.listen(PORT, () => {
   if (config.nodeEnv === 'production') {
     logger.info('🚀 Initializing content aggregation job...');
     initializeContentAggregation(true); // Run immediately and schedule
+
+    logger.info('📧 Initializing email digest jobs...');
+    initializeEmailDigestJobs();
   } else {
     logger.info('⚠️  Content aggregation disabled in development mode');
     logger.info('   To enable manually: POST /api/admin/aggregate');
+    logger.info('⚠️  Email digests disabled in development mode');
   }
 });
 

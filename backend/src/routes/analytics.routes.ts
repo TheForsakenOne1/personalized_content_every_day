@@ -21,8 +21,23 @@ router.get('/streak', auth, analyticsController.getReadingStreak.bind(analyticsC
 // GET /api/analytics/topics - Get topic breakdown
 router.get('/topics', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getTopicBreakdown.bind(analyticsController));
 
+// GET /api/analytics/category-stats - Get category statistics (alias for topics)
+router.get('/category-stats', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getTopicBreakdown.bind(analyticsController));
+
 // GET /api/analytics/activity - Get activity timeline
 router.get('/activity', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getActivityTimeline.bind(analyticsController));
+
+// GET /api/analytics/time-series - Get time series data (alias for activity)
+router.get('/time-series', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getActivityTimeline.bind(analyticsController));
+
+// GET /api/analytics/content-type-breakdown - Get content type breakdown
+router.get('/content-type-breakdown', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getContentTypeBreakdown.bind(analyticsController));
+
+// GET /api/analytics/engagement - Get engagement metrics
+router.get('/engagement', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getEngagementMetrics.bind(analyticsController));
+
+// GET /api/analytics/insights - Get learning insights
+router.get('/insights', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getLearningInsights.bind(analyticsController));
 
 // GET /api/analytics/dashboard - Get comprehensive dashboard analytics
 router.get('/dashboard', auth, validateQuery(schemas.analyticsDateRange), analyticsController.getDashboardAnalytics.bind(analyticsController));

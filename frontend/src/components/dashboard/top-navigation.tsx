@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
-  Bell,
   Search,
   GraduationCap,
   User,
@@ -18,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -90,10 +90,7 @@ export function TopNavigation({
           <ThemeToggle />
 
           {/* Notifications */}
-          <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationBell />
 
           {/* User Profile Dropdown */}
           <div className="relative">

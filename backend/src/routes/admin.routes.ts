@@ -35,4 +35,10 @@ router.delete('/content/:contentId', validateParams(schemas.adminContentId), adm
 // GET /api/admin/health - System health check
 router.get('/health', adminController.getSystemHealth.bind(adminController));
 
+// POST /api/admin/send-daily-digests - Manually trigger daily email digests
+router.post('/send-daily-digests', adminController.sendDailyDigests.bind(adminController));
+
+// POST /api/admin/send-weekly-digests - Manually trigger weekly email digests
+router.post('/send-weekly-digests', adminController.sendWeeklyDigests.bind(adminController));
+
 export default router;

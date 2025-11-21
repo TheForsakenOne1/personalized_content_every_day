@@ -541,6 +541,64 @@ export class AnalyticsService {
       throw error;
     }
   }
+
+  /**
+   * Get content type breakdown
+   */
+  async getContentTypeBreakdown(_userId: string) {
+    try {
+      // TODO: Implement with actual database queries
+      return [
+        { type: 'video', count: 0, percentage: 0 },
+        { type: 'article', count: 0, percentage: 0 },
+        { type: 'paper', count: 0, percentage: 0 },
+        { type: 'blog', count: 0, percentage: 0 },
+      ];
+    } catch (error) {
+      logger.error('Error fetching content type breakdown:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get engagement metrics
+   */
+  async getEngagementMetrics(_userId: string) {
+    try {
+      // TODO: Implement with actual database queries
+      return {
+        savedCount: 0,
+        ratedCount: 0,
+        averageRating: 0,
+        engagementRate: 0,
+      };
+    } catch (error) {
+      logger.error('Error fetching engagement metrics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get learning insights
+   */
+  async getLearningInsights(_userId: string) {
+    try {
+      // TODO: Implement with actual database queries
+      return {
+        growth: {
+          weekly: 0,
+          monthly: 0,
+          diversity: 0,
+          consistency: 0,
+        },
+        topInterests: [],
+        recommendedTopics: [],
+      };
+    } catch (error) {
+      logger.error('Error fetching learning insights:', error);
+      throw error;
+    }
+  }
 }
 
 export const analyticsService = new AnalyticsService();

@@ -23,6 +23,7 @@ export interface User {
   fullName?: string;
   avatarUrl?: string;
   emailVerified: boolean;
+  isAdmin: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -6,6 +6,7 @@ export interface User {
   fullName: string | null;
   avatarUrl: string | null;
   emailVerified: boolean;
+  isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date | null;

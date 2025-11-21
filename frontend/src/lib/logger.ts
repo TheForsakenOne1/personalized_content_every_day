@@ -3,8 +3,6 @@
  * Production-ready logging utility with environment-aware behavior
  */
 
-import * as Sentry from '@sentry/nextjs';
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
@@ -13,7 +11,6 @@ interface LogContext {
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
-  private isProduction = process.env.NODE_ENV === 'production';
 
   /**
    * Format log message with context
@@ -22,19 +19,6 @@ class Logger {
     const timestamp = new Date().toISOString();
     const contextStr = context ? ` ${JSON.stringify(context)}` : '';
     return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
-  }
-
-  /**
-   * Send logs to external service (Sentry)
-   */
-  private sendToExternalService(level: LogLevel, message: string, context?: LogContext): void {
-    // Only send errors and warnings to external services in production
-    if (this.isProduction && (level === 'error' || level === 'warn')) {
-      Sentry.captureMessage(message, {
-        level: level as Sentry.SeverityLevel,
-        extra: context,
-      });
-    }
   }
 
   /**
@@ -53,7 +37,6 @@ class Logger {
     if (this.isDevelopment) {
       console.info(this.formatMessage('info', message, context));
     }
-    this.sendToExternalService('info', message, context);
   }
 
   /**
@@ -63,7 +46,6 @@ class Logger {
     if (this.isDevelopment) {
       console.warn(this.formatMessage('warn', message, context));
     }
-    this.sendToExternalService('warn', message, context);
   }
 
   /**
@@ -83,20 +65,6 @@ class Logger {
       console.error(this.formatMessage('error', message, errorContext));
       if (error instanceof Error) {
         console.error(error);
-      }
-    }
-
-    // Send to Sentry in production
-    if (this.isProduction) {
-      if (error instanceof Error) {
-        Sentry.captureException(error, {
-          extra: {
-            ...context,
-            logMessage: message,
-          },
-        });
-      } else {
-        this.sendToExternalService('error', message, errorContext);
       }
     }
   }

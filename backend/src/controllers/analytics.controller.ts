@@ -191,6 +191,99 @@ export class AnalyticsController {
       });
     }
   }
+
+  /**
+   * GET /api/analytics/content-type-breakdown
+   * Get content type breakdown
+   */
+  async getContentTypeBreakdown(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
+
+      const breakdown = await analyticsService.getContentTypeBreakdown(userId);
+
+      return res.json({
+        success: true,
+        data: breakdown,
+      });
+    } catch (error: any) {
+      logger.error('Content type breakdown error:', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to fetch content type breakdown',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * GET /api/analytics/engagement
+   * Get engagement metrics
+   */
+  async getEngagementMetrics(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
+
+      const metrics = await analyticsService.getEngagementMetrics(userId);
+
+      return res.json({
+        success: true,
+        data: metrics,
+      });
+    } catch (error: any) {
+      logger.error('Engagement metrics error:', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to fetch engagement metrics',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * GET /api/analytics/insights
+   * Get learning insights
+   */
+  async getLearningInsights(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
+
+      const insights = await analyticsService.getLearningInsights(userId);
+
+      return res.json({
+        success: true,
+        data: insights,
+      });
+    } catch (error: any) {
+      logger.error('Learning insights error:', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to fetch learning insights',
+        error: error.message,
+      });
+    }
+  }
 }
 
 export const analyticsController = new AnalyticsController();

@@ -32,6 +32,7 @@ model User {
   refreshTokens          RefreshToken[]
   passwordResetTokens    PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  notifications          Notification[]
 
   @@map("users")
 }
@@ -281,4 +282,22 @@ model EmailVerificationToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("email_verification_tokens")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   // 'info', 'success', 'warning', 'content_recommendation', 'achievement', 'system'
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

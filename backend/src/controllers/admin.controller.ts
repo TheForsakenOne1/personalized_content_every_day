@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { aggregatorService } from '../services/aggregation/aggregator.service';
+import { sendDailyDigests, sendWeeklyDigests } from '../jobs/email-digest.job';
 import logger from '../utils/logger';
 import { API_LIMITS, HTTP_STATUS } from '../constants';
 
@@ -266,6 +267,60 @@ export class AdminController {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Health check failed',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/admin/send-daily-digests
+   * Manually trigger daily email digests
+   */
+  async sendDailyDigests(_req: Request, res: Response) {
+    try {
+      logger.info('Admin manually triggered daily digests');
+
+      // Trigger digest job asynchronously
+      sendDailyDigests().catch((error) => {
+        logger.error('Daily digest job failed:', error);
+      });
+
+      return res.json({
+        success: true,
+        message: 'Daily digest job started',
+      });
+    } catch (error: any) {
+      logger.error('Failed to trigger daily digests', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to trigger daily digests',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/admin/send-weekly-digests
+   * Manually trigger weekly email digests
+   */
+  async sendWeeklyDigests(_req: Request, res: Response) {
+    try {
+      logger.info('Admin manually triggered weekly digests');
+
+      // Trigger digest job asynchronously
+      sendWeeklyDigests().catch((error) => {
+        logger.error('Weekly digest job failed:', error);
+      });
+
+      return res.json({
+        success: true,
+        message: 'Weekly digest job started',
+      });
+    } catch (error: any) {
+      logger.error('Failed to trigger weekly digests', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to trigger weekly digests',
         error: error.message,
       });
     }
