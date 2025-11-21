@@ -12,6 +12,7 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import logger from './utils/logger';
 import { initializeContentAggregation } from './jobs/content-aggregation.job';
+import { validateEnv } from './config/validate-env';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -24,6 +25,9 @@ import adminRoutes from './routes/admin.routes';
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment variables on startup
+validateEnv();
 
 const app: Application = express();
 const httpServer = createServer(app);

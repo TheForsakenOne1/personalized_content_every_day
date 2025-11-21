@@ -1,0 +1,106 @@
+version: '3.8'
+
+# Development Docker Compose Configuration
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: eduhub-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eduhub_dev
+      POSTGRES_USER: eduhub_user
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduhub_user -d eduhub_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eduhub-dev-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: eduhub-redis-dev
+    restart: unless-stopped
+    command: redis-server --requirepass dev_redis_password
+    volumes:
+      - redis-dev-data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - eduhub-dev-network
+
+  # Backend API (Development Mode with Hot Reload)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: eduhub-backend-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://eduhub_user:dev_password@postgres:5432/eduhub_dev
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: dev_redis_password
+      JWT_SECRET: dev-jwt-secret-not-for-production
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    command: npm run dev
+    networks:
+      - eduhub-dev-network
+
+  # Frontend (Development Mode with Hot Reload)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: eduhub-frontend-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    networks:
+      - eduhub-dev-network
+
+volumes:
+  postgres-dev-data:
+    driver: local
+  redis-dev-data:
+    driver: local
+
+networks:
+  eduhub-dev-network:
+    driver: bridge
