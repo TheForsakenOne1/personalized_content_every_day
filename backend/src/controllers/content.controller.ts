@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants';
 import { ContentService } from '../services/content.service';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
+import { aggregatorService } from '../services/aggregation/aggregator.service';
 
 const contentService = new ContentService();
 
@@ -186,6 +187,58 @@ export class ContentController {
       res.json({
         success: true,
         data: { message: 'Tags removed successfully' },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/content/freshness
+   * Check if content is stale (older than 6 hours)
+   */
+  async checkContentFreshness(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { categoryId } = req.query;
+
+      const freshness = await contentService.checkContentFreshness(
+        categoryId as string | undefined
+      );
+
+      res.json({
+        success: true,
+        data: freshness,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/content/refresh
+   * Trigger on-demand content aggregation
+   */
+  async refreshContent(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { categoryId, categoryName } = req.body;
+
+      // Trigger aggregation in background
+      if (categoryId && categoryName) {
+        aggregatorService.aggregateForCategory(categoryId, categoryName).catch((err) => {
+          logger.error('Aggregation error:', err);
+        });
+      } else {
+        aggregatorService.aggregateAll().catch((err) => {
+          logger.error('Content aggregation failed', { error: err.message });
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          message: 'Content refresh started',
+          note: 'Aggregation is running in the background',
+        },
       });
     } catch (error) {
       next(error);

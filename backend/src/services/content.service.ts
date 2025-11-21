@@ -365,4 +365,61 @@ export class ContentService {
 
     return result;
   }
+
+  /**
+   * Check if content is stale (older than 6 hours)
+   * Returns freshness information for content
+   */
+  async checkContentFreshness(categoryId?: string) {
+    const SIX_HOURS_AGO = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+    const where: any = {};
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    // Get the most recent content
+    const mostRecentContent = await prisma.content.findFirst({
+      where,
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true, categoryId: true, category: true },
+    });
+
+    // Count total content
+    const totalContent = await prisma.content.count({ where });
+
+    // Count stale content (older than 6 hours)
+    const staleContent = await prisma.content.count({
+      where: {
+        ...where,
+        createdAt: { lt: SIX_HOURS_AGO },
+      },
+    });
+
+    // Count fresh content (less than 6 hours old)
+    const freshContent = await prisma.content.count({
+      where: {
+        ...where,
+        createdAt: { gte: SIX_HOURS_AGO },
+      },
+    });
+
+    const isStale = !mostRecentContent || mostRecentContent.createdAt < SIX_HOURS_AGO;
+    const lastUpdated = mostRecentContent?.createdAt || null;
+    const ageInHours = lastUpdated
+      ? (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60)
+      : null;
+
+    return {
+      isStale,
+      lastUpdated,
+      ageInHours: ageInHours ? Math.round(ageInHours * 10) / 10 : null,
+      totalContent,
+      freshContent,
+      staleContent,
+      freshnessPercentage: totalContent > 0 ? Math.round((freshContent / totalContent) * 100) : 0,
+      shouldRefresh: isStale || freshnessPercentage < 50,
+      category: mostRecentContent?.category || null,
+    };
+  }
 }

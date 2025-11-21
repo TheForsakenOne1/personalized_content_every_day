@@ -7,6 +7,7 @@ export { contentService, type Content, type ContentFilters, type PaginatedRespon
 export { userService, type UserPreferences, type UserCategory, type UserStats } from './user.service';
 export { categoryService, type Category } from './category.service';
 export { searchService, type SearchSuggestion, type SearchResult } from './search.service';
+export { contentRefreshService, type ContentFreshness } from './content-refresh.service';
 
 // Re-export API client for direct access if needed
 export { apiClient } from '@/lib/api-client';

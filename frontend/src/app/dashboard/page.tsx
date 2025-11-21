@@ -8,9 +8,9 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { FeaturedContent } from "@/components/dashboard/featured-content";
 import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { userService, contentService } from "@/services/api";
+import { userService, contentService, contentRefreshService } from "@/services/api";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [featuredContent, setFeaturedContent] = useState<any>(null);
   const [filter, setFilter] = useState<"all" | "unread" | "saved">("all");
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Redirect to onboarding if not completed
   useEffect(() => {
@@ -32,6 +33,15 @@ export default function DashboardPage() {
     const fetchContent = async () => {
       try {
         setLoading(true);
+
+        // Check if content is stale and trigger refresh if needed
+        const refreshTriggered = await contentRefreshService.smartRefresh();
+
+        if (refreshTriggered) {
+          setIsRefreshing(true);
+          console.log('Content is stale, refresh triggered in background');
+        }
+
         const feedContent = await userService.getFeed(filter);
 
         // Transform API data to match ContentItem interface
@@ -79,6 +89,8 @@ export default function DashboardPage() {
         });
       } finally {
         setLoading(false);
+        // Reset refreshing state after 3 seconds
+        setTimeout(() => setIsRefreshing(false), 3000);
       }
     };
 

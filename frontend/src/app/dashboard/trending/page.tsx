@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentItem } from "@/components/dashboard/content-card";
-import { Flame, Clock, Loader2 } from "lucide-react";
+import { Flame, Clock, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { contentService, type Content } from "@/services/api";
+import { contentService, contentRefreshService, type Content } from "@/services/api";
 
 // Helper function to convert Content to ContentItem
 const convertToContentItem = (content: Content): ContentItem => {
@@ -33,10 +33,19 @@ const convertToContentItem = (content: Content): ContentItem => {
 export default function TrendingPage() {
   const [trending, setTrending] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchTrending = async () => {
       try {
+        // Check if content is stale and trigger refresh if needed
+        const refreshTriggered = await contentRefreshService.smartRefresh();
+
+        if (refreshTriggered) {
+          setIsRefreshing(true);
+          console.log('Content is stale, refresh triggered in background');
+        }
+
         const data = await contentService.getTrendingContent(7, 20); // Last 7 days, max 20 items
         const converted = data.map(convertToContentItem);
         setTrending(converted);
@@ -46,6 +55,8 @@ export default function TrendingPage() {
         setTrending([]);
       } finally {
         setLoading(false);
+        // Reset refreshing state after 3 seconds
+        setTimeout(() => setIsRefreshing(false), 3000);
       }
     };
 
@@ -68,9 +79,22 @@ export default function TrendingPage() {
                   Trending
                 </h1>
               </div>
-              <p className="text-xl text-gray-600 dark:text-gray-400">
-                Discover what's popular across your interests
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-xl text-gray-600 dark:text-gray-400">
+                  Discover what's popular across your interests
+                </p>
+                {isRefreshing && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    className="flex items-center gap-2 px-3 py-1 bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-900/50 rounded-full text-sm text-pink-700 dark:text-pink-400"
+                  >
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    <span>Refreshing content...</span>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
 

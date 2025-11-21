@@ -9,6 +9,8 @@ const contentController = new ContentController();
 router.get('/', optionalAuth, contentController.getContent.bind(contentController));
 router.get('/search', contentController.searchContent.bind(contentController));
 router.get('/trending', contentController.getTrendingContent.bind(contentController));
+router.get('/freshness', authenticate, contentController.checkContentFreshness.bind(contentController));
+router.post('/refresh', authenticate, contentController.refreshContent.bind(contentController));
 router.get('/:id', optionalAuth, contentController.getContentById.bind(contentController));
 
 // Admin routes (TODO: Add admin middleware)
