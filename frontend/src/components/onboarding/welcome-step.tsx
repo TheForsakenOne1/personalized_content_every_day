@@ -20,25 +20,25 @@ const features = [
     icon: Sparkles,
     title: "Personalized Learning",
     description: "Content curated just for you based on your interests",
-    color: "from-purple-500 to-purple-600",
+    color: "from-pink-500 to-rose-500",
   },
   {
     icon: BookOpen,
     title: "Diverse Sources",
     description: "Research papers, articles, and videos all in one place",
-    color: "from-blue-500 to-blue-600",
+    color: "from-pink-500 to-rose-600",
   },
   {
     icon: TrendingUp,
     title: "Track Progress",
     description: "Monitor your learning journey and stay motivated",
-    color: "from-green-500 to-green-600",
+    color: "from-rose-500 to-pink-600",
   },
   {
     icon: Globe2,
     title: "Expand Horizons",
     description: "Explore topics from astronomy to technology",
-    color: "from-orange-500 to-orange-600",
+    color: "from-pink-600 to-rose-600",
   },
 ];
 

@@ -47,7 +47,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const { setUser } = useAuthStore();
+  const { setUser, setAccessToken } = useAuthStore();
   const { resetOnboarding } = useOnboardingStore();
 
   const {
@@ -80,8 +80,8 @@ export default function RegisterPage() {
         password: registerData.password,
       });
 
-      // Step 3: Store tokens and user data
-      localStorage.setItem("accessToken", authResponse.accessToken);
+      // Step 3: Store tokens and user data in auth store
+      setAccessToken(authResponse.accessToken);
       setUser(authResponse.user);
 
       // Step 4: Reset onboarding state for fresh start

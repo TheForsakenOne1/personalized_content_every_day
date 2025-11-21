@@ -24,7 +24,7 @@ const tutorialFeatures = [
     icon: Search,
     title: "Search & Discover",
     description: "Use the search bar to find specific topics or browse by category.",
-    color: "from-blue-500 to-blue-600",
+    color: "from-pink-500 to-rose-500",
     tips: [
       "Filter by content type (papers, videos, articles)",
       "Use category filters for focused browsing",
@@ -35,7 +35,7 @@ const tutorialFeatures = [
     icon: Bookmark,
     title: "Save for Later",
     description: "Bookmark content to read later and build your personal library.",
-    color: "from-yellow-500 to-yellow-600",
+    color: "from-pink-500 to-rose-600",
     tips: [
       "Click the bookmark icon on any content card",
       "Access saved items from the sidebar",
@@ -46,7 +46,7 @@ const tutorialFeatures = [
     icon: Eye,
     title: "Track Your Progress",
     description: "Mark content as read to track your learning journey.",
-    color: "from-green-500 to-green-600",
+    color: "from-rose-500 to-pink-500",
     tips: [
       "Content automatically marked as read when viewed",
       "See your weekly reading stats in the sidebar",
@@ -57,7 +57,7 @@ const tutorialFeatures = [
     icon: Settings,
     title: "Customize Preferences",
     description: "Adjust topic priorities and content frequency to match your needs.",
-    color: "from-purple-500 to-purple-600",
+    color: "from-pink-600 to-rose-600",
     tips: [
       "Set priority levels for each topic",
       "Choose daily, weekly, or monthly updates",
@@ -68,7 +68,7 @@ const tutorialFeatures = [
     icon: Bell,
     title: "Stay Updated",
     description: "Get notified about new content in your areas of interest.",
-    color: "from-red-500 to-red-600",
+    color: "from-rose-500 to-pink-600",
     tips: [
       "Receive notifications for trending content",
       "Get alerts for new papers in your field",
@@ -79,7 +79,7 @@ const tutorialFeatures = [
     icon: TrendingUp,
     title: "Discover Trending",
     description: "Explore what's popular in your communities and beyond.",
-    color: "from-orange-500 to-orange-600",
+    color: "from-pink-500 to-rose-500",
     tips: [
       "See trending content across all categories",
       "Discover popular papers and articles",
@@ -188,7 +188,7 @@ export function TutorialStep({ onComplete, onBack }: TutorialStepProps) {
                   className="flex items-start gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4"
                 >
                   <div className="flex-shrink-0 mt-0.5">
-                    <div className="p-1 bg-green-500 rounded-full">
+                    <div className="p-1 bg-pink-500 rounded-full">
                       <Check className="h-3 w-3 text-white" />
                     </div>
                   </div>
