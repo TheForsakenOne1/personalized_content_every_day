@@ -9,105 +9,6 @@ import { Flame, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { contentService, type Content } from "@/services/api";
 
-const mockTrending: ContentItem[] = [
-  {
-    id: "tr-1",
-    type: "video",
-    title: "AI Breakthrough: GPT-5 Demonstrates True Reasoning Capabilities",
-    description: "OpenAI's latest model shows unprecedented problem-solving abilities and contextual understanding, marking a significant leap in artificial general intelligence.",
-    source: "TechCrunch",
-    author: "Alex Thompson",
-    publishedAt: "2024-01-15",
-    thumbnailUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
-    url: "/content/tr-1",
-    category: "Technology",
-    tags: ["AI", "GPT", "machine learning"],
-    duration: 900,
-    isRead: false,
-    isSaved: false,
-  },
-  {
-    id: "tr-2",
-    type: "article",
-    title: "James Webb Telescope Discovers Earth-Like Exoplanet with Biosignatures",
-    description: "Astronomers detect potential signs of life on planet in habitable zone, 120 light-years away. This discovery could revolutionize our understanding of life in the universe.",
-    source: "NASA",
-    author: "Dr. Emily Rodriguez",
-    publishedAt: "2024-01-14",
-    thumbnailUrl: "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800&q=80",
-    url: "/content/tr-2",
-    category: "Astronomy",
-    tags: ["exoplanets", "JWST", "astrobiology"],
-    readTime: 8,
-    isRead: false,
-    isSaved: true,
-  },
-  {
-    id: "tr-3",
-    type: "article",
-    title: "Geopolitical Shift: New Alliance Forms in Response to Global Economic Changes",
-    description: "Major economies announce unprecedented cooperation framework that could reshape international trade and diplomatic relations for decades.",
-    source: "The Economist",
-    author: "James Patterson",
-    publishedAt: "2024-01-14",
-    thumbnailUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
-    url: "/content/tr-3",
-    category: "Geopolitics",
-    tags: ["international relations", "economy", "diplomacy"],
-    readTime: 15,
-    isRead: false,
-    isSaved: false,
-  },
-  {
-    id: "tr-4",
-    type: "paper",
-    title: "Fusion Energy Breakthrough: Net Positive Energy Production Achieved Repeatedly",
-    description: "Scientists successfully replicate last year's fusion ignition experiment multiple times, moving closer to commercial fusion power generation.",
-    source: "Nature Energy",
-    author: "National Ignition Facility Team",
-    publishedAt: "2024-01-13",
-    thumbnailUrl: "https://images.unsplash.com/photo-1530603907829-659ab5ec057b?w=800&q=80",
-    url: "/content/tr-4",
-    category: "Energy",
-    tags: ["fusion", "clean energy", "physics"],
-    readTime: 20,
-    isRead: false,
-    isSaved: true,
-  },
-  {
-    id: "tr-5",
-    type: "video",
-    title: "Ancient Roman Computer: How the Antikythera Mechanism Really Worked",
-    description: "New analysis reveals the 2000-year-old device was far more sophisticated than previously thought, challenging our understanding of ancient technology.",
-    source: "History Channel",
-    author: "Prof. Marcus Stone",
-    publishedAt: "2024-01-13",
-    thumbnailUrl: "https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&q=80",
-    url: "/content/tr-5",
-    category: "History",
-    tags: ["ancient technology", "archaeology", "Rome"],
-    duration: 1440,
-    isRead: true,
-    isSaved: false,
-  },
-  {
-    id: "tr-6",
-    type: "article",
-    title: "Revolutionary Cancer Treatment Shows 90% Success Rate in Clinical Trials",
-    description: "New immunotherapy approach using engineered T-cells demonstrates remarkable effectiveness against previously untreatable forms of cancer.",
-    source: "The Lancet",
-    author: "Dr. Lisa Anderson",
-    publishedAt: "2024-01-12",
-    thumbnailUrl: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&q=80",
-    url: "/content/tr-6",
-    category: "Medicine",
-    tags: ["cancer research", "immunotherapy", "clinical trials"],
-    readTime: 12,
-    isRead: false,
-    isSaved: true,
-  },
-];
-
 // Helper function to convert Content to ContentItem
 const convertToContentItem = (content: Content): ContentItem => {
   return {
@@ -141,8 +42,8 @@ export default function TrendingPage() {
         setTrending(converted);
       } catch (error) {
         console.error('Failed to fetch trending content:', error);
-        // Fallback to mock data if API fails
-        setTrending(mockTrending);
+        // Don't fallback to mock data - show empty state instead
+        setTrending([]);
       } finally {
         setLoading(false);
       }
@@ -150,8 +51,6 @@ export default function TrendingPage() {
 
     fetchTrending();
   }, []);
-
-  const displayContent = trending.length > 0 ? trending : mockTrending;
 
   return (
     <ProtectedRoute>
@@ -180,13 +79,13 @@ export default function TrendingPage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
             </div>
-          ) : displayContent.length === 0 ? (
+          ) : trending.length === 0 ? (
             <div className="text-center py-12 text-gray-600 dark:text-gray-400">
               No trending content available at the moment.
             </div>
           ) : (
             <div className="space-y-3">
-              {displayContent.map((item, index) => (
+              {trending.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, x: -10 }}

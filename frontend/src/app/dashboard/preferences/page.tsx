@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { toast } from "sonner";
+import { userService, categoryService } from "@/services/api";
 import {
   Telescope,
   Globe2,
@@ -49,135 +50,135 @@ const topics: Topic[] = [
     name: "Software Development",
     description: "Programming, tech trends, and engineering",
     icon: Code,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "astronomy",
     name: "Astronomy",
     description: "Space exploration and cosmic discoveries",
     icon: Telescope,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "history",
     name: "History",
     description: "Historical events and civilizations",
     icon: History,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "physics",
     name: "Physics",
     description: "Quantum mechanics and theoretical physics",
     icon: Atom,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "medicine",
     name: "Medicine & Health",
     description: "Medical research and healthcare innovations",
     icon: HeartPulse,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "mathematics",
     name: "Mathematics",
     description: "Pure and applied mathematics",
     icon: Calculator,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "geopolitics",
     name: "Geopolitics",
     description: "International relations and global affairs",
     icon: Globe2,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "economics",
     name: "Economics",
     description: "Economic theory and financial systems",
     icon: TrendingUp,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "psychology",
     name: "Psychology",
     description: "Human behavior and cognitive science",
     icon: Brain,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "philosophy",
     name: "Philosophy",
     description: "Ethics, logic, and metaphysics",
     icon: Lightbulb,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "environmental-science",
     name: "Environmental Science",
     description: "Climate change and conservation",
     icon: Leaf,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "cybersecurity",
     name: "Cybersecurity",
     description: "Digital security and cryptography",
     icon: Shield,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "geography",
     name: "Geography",
     description: "Earth sciences and climate studies",
     icon: MapPin,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "literature",
     name: "Literature & Arts",
     description: "Books and artistic movements",
     icon: BookOpen,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "music",
     name: "Music",
     description: "Music theory and composition",
     icon: Music,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "visual-arts",
     name: "Visual Arts",
     description: "Painting, sculpture, and design",
     icon: Palette,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "linguistics",
     name: "Linguistics",
     description: "Language structure and evolution",
     icon: Languages,
-    enabled: true,
+    enabled: false,
   },
   {
     id: "film",
     name: "Film & Cinema",
     description: "Film theory and cinematography",
     icon: Film,
-    enabled: true,
+    enabled: false,
   },
 ];
 
 const paperSources: PaperSource[] = [
-  { id: "arxiv", name: "arXiv", enabled: true },
-  { id: "pubmed", name: "PubMed", enabled: true },
+  { id: "arxiv", name: "arXiv", enabled: false },
+  { id: "pubmed", name: "PubMed", enabled: false },
   { id: "ieee", name: "IEEE Xplore", enabled: false },
   { id: "springer", name: "Springer", enabled: false },
-  { id: "nature", name: "Nature", enabled: true },
+  { id: "nature", name: "Nature", enabled: false },
   { id: "sciencedirect", name: "ScienceDirect", enabled: false },
 ];
 
@@ -185,6 +186,35 @@ export default function PreferencesPage() {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>(topics);
   const [selectedSources, setSelectedSources] = useState<PaperSource[]>(paperSources);
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user's existing preferences
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const userCategories = await userService.getCategories();
+
+        // Map user's saved categories to enabled topics
+        if (userCategories.length > 0) {
+          setSelectedTopics(prevTopics =>
+            prevTopics.map(topic => {
+              const hasCategory = userCategories.some(
+                uc => uc.category?.name.toLowerCase() === topic.name.toLowerCase() ||
+                      uc.category?.slug === topic.id
+              );
+              return { ...topic, enabled: hasCategory };
+            })
+          );
+        }
+      } catch (error) {
+        console.error('Failed to fetch preferences:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
 
   const toggleTopic = (id: string) => {
     setSelectedTopics((prev) =>
@@ -205,9 +235,31 @@ export default function PreferencesPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Get all enabled topics
+      const enabledTopicNames = selectedTopics
+        .filter(t => t.enabled)
+        .map(t => t.name);
+
+      // Fetch all categories from backend
+      const allCategories = await categoryService.getCategories();
+
+      // Map enabled topic names to category IDs
+      const categoryIds = enabledTopicNames
+        .map(topicName => {
+          const category = allCategories.find(
+            cat => cat.name.toLowerCase() === topicName.toLowerCase() ||
+                   cat.slug === topicName.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')
+          );
+          return category?.id;
+        })
+        .filter((id): id is string => id !== undefined);
+
+      // Save to backend
+      await userService.updateCategories(categoryIds);
+
       toast.success("Your preferences have been saved!");
     } catch (error) {
+      console.error('Failed to save preferences:', error);
       toast.error("Failed to save preferences");
     } finally {
       setIsSaving(false);
@@ -216,6 +268,21 @@ export default function PreferencesPage() {
 
   const enabledCount = selectedTopics.filter((t) => t.enabled).length;
   const sourcesCount = selectedSources.filter((s) => s.enabled).length;
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading preferences...</p>
+            </div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
