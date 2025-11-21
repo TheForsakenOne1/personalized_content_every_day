@@ -325,7 +325,7 @@ export default function ContentManagementPage() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={selectedItems.size === content.length && content.length > 0}
-                    onCheckedChange={toggleSelectAll}
+                    onChange={toggleSelectAll}
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Select all on this page
@@ -347,7 +347,7 @@ export default function ContentManagementPage() {
                         {/* Checkbox */}
                         <Checkbox
                           checked={selectedItems.has(item.id)}
-                          onCheckedChange={() => toggleSelectItem(item.id)}
+                          onChange={() => toggleSelectItem(item.id)}
                           className="mt-1"
                         />
 
