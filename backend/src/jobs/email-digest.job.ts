@@ -4,7 +4,7 @@
  */
 
 import cron from 'node-cron';
-import { prisma } from '../config/database';
+import { prisma } from '../utils/prisma';
 import logger from '../utils/logger';
 import { emailService } from '../services/email/email.service';
 
@@ -70,17 +70,13 @@ async function sendDailyDigests(): Promise<void> {
         }
 
         // Format content for digest
-        const digestContent = feedItems.map((item) => ({
+        const digestContent = feedItems.map((item: any) => ({
+          id: item.content.id,
           title: item.content.title,
           description: item.content.description || '',
           url: item.content.url,
-          thumbnailUrl: item.content.thumbnailUrl || undefined,
-          contentType: item.content.contentType,
           category: item.content.category.name,
-          author: item.content.author || undefined,
-          publishedAt: item.content.publishedAt || undefined,
-          qualityScore: Number(item.content.qualityScore),
-          reason: item.reason || undefined,
+          source: item.content.source,
         }));
 
         // Send digest email
@@ -167,57 +163,49 @@ async function sendWeeklyDigests(): Promise<void> {
         }
 
         // Format content for digest
-        const digestContent = feedItems.map((item) => ({
+        const digestContent = feedItems.map((item: any) => ({
+          id: item.content.id,
           title: item.content.title,
           description: item.content.description || '',
           url: item.content.url,
-          thumbnailUrl: item.content.thumbnailUrl || undefined,
-          contentType: item.content.contentType,
           category: item.content.category.name,
-          author: item.content.author || undefined,
-          publishedAt: item.content.publishedAt || undefined,
-          qualityScore: Number(item.content.qualityScore),
-          reason: item.reason || undefined,
+          source: item.content.source,
         }));
 
         // Calculate user stats for the week
+        const contentReadCount = await prisma.userContentInteraction.count({
+          where: {
+            userId: user.id,
+            status: 'read',
+            readAt: {
+              gte: weekStart,
+            },
+          },
+        });
+
+        const timeSpentAggregate = await prisma.userContentInteraction.aggregate({
+          where: {
+            userId: user.id,
+            readAt: {
+              gte: weekStart,
+            },
+          },
+          _sum: {
+            timeSpent: true,
+          },
+        });
+
         const weeklyStats = {
-          contentRead: await prisma.userContentInteraction.count({
-            where: {
-              userId: user.id,
-              status: 'read',
-              readAt: {
-                gte: weekStart,
-              },
-            },
-          }),
-          timeSpent: await prisma.userContentInteraction.aggregate({
-            where: {
-              userId: user.id,
-              readAt: {
-                gte: weekStart,
-              },
-            },
-            _sum: {
-              timeSpent: true,
-            },
-          }),
-          categoriesExplored: await prisma.userContentInteraction.groupBy({
-            by: ['contentId'],
-            where: {
-              userId: user.id,
-              readAt: {
-                gte: weekStart,
-              },
-            },
-          }),
+          contentRead: contentReadCount,
+          timeSpentMinutes: Math.round((timeSpentAggregate._sum.timeSpent || 0) / 60),
+          topCategories: user.categories.slice(0, 3).map((uc: any) => uc.category.name),
         };
 
-        // Send weekly digest email
+        // Send weekly digest email (stats, then content)
         await emailService.sendWeeklyDigest(
           user.email,
-          digestContent,
-          weeklyStats
+          weeklyStats,
+          digestContent
         );
         successCount++;
 

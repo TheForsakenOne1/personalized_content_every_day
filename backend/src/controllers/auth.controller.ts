@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth.service';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../utils/prisma';
+import { queueUserFeedGeneration } from '../jobs/feed-generation.job';
 
 const authService = new AuthService();
 
@@ -21,6 +22,9 @@ export class AuthController {
         password,
         fullName,
       });
+
+      // Queue feed generation for new user (async, non-blocking)
+      queueUserFeedGeneration(user.id);
 
       res.status(201).json({
         success: true,
@@ -43,6 +47,9 @@ export class AuthController {
       }
 
       const result = await authService.login({ email, password });
+
+      // Queue feed generation for returning user (async, non-blocking)
+      queueUserFeedGeneration(result.user.id);
 
       // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', result.refreshToken, {

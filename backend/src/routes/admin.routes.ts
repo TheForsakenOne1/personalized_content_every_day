@@ -41,4 +41,13 @@ router.post('/send-daily-digests', adminController.sendDailyDigests.bind(adminCo
 // POST /api/admin/send-weekly-digests - Manually trigger weekly email digests
 router.post('/send-weekly-digests', adminController.sendWeeklyDigests.bind(adminController));
 
+// POST /api/admin/generate-all-feeds - Generate personalized feeds for all users
+router.post('/generate-all-feeds', adminController.generateAllFeeds.bind(adminController));
+
+// POST /api/admin/check-content-freshness - Check content freshness and trigger aggregation
+router.post('/check-content-freshness', adminController.checkContentFreshness.bind(adminController));
+
+// POST /api/admin/check-urgent-updates - Check for categories needing urgent updates
+router.post('/check-urgent-updates', adminController.checkUrgentUpdates.bind(adminController));
+
 export default router;

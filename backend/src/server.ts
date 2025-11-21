@@ -14,6 +14,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 import logger from './utils/logger';
 import { initializeContentAggregation } from './jobs/content-aggregation.job';
 import { initializeEmailDigestJobs } from './jobs/email-digest.job';
+import { initializeContentFreshnessJobs } from './jobs/content-freshness.job';
 import { validateEnv } from './config/validate-env';
 import { swaggerSpec } from './config/swagger';
 
@@ -142,18 +143,24 @@ httpServer.listen(PORT, () => {
     corsOrigin: config.corsOrigin,
   });
 
-  // Initialize content aggregation job in production
+  // Initialize background jobs in production
   if (config.nodeEnv === 'production') {
     logger.info('🚀 Initializing content aggregation job...');
     initializeContentAggregation(true); // Run immediately and schedule
 
     logger.info('📧 Initializing email digest jobs...');
     initializeEmailDigestJobs();
+
+    logger.info('🔍 Initializing content freshness monitoring...');
+    initializeContentFreshnessJobs();
   } else {
     logger.info('⚠️  Content aggregation disabled in development mode');
     logger.info('   To enable manually: POST /api/admin/aggregate');
     logger.info('⚠️  Email digests disabled in development mode');
+    logger.info('⚠️  Content freshness monitoring disabled in development mode');
   }
+
+  // Note: Feed generation runs automatically on login/register in all environments
 });
 
 // Graceful shutdown

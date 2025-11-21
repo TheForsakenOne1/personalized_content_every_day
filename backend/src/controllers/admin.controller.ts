@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { aggregatorService } from '../services/aggregation/aggregator.service';
 import { sendDailyDigests, sendWeeklyDigests } from '../jobs/email-digest.job';
+import { generateAllUserFeeds } from '../jobs/feed-generation.job';
+import { checkContentFreshness, checkUrgentUpdates } from '../jobs/content-freshness.job';
 import logger from '../utils/logger';
 import { API_LIMITS, HTTP_STATUS } from '../constants';
 
@@ -321,6 +323,87 @@ export class AdminController {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to trigger weekly digests',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/admin/generate-all-feeds
+   * Manually trigger feed generation for all users
+   */
+  async generateAllFeeds(_req: Request, res: Response) {
+    try {
+      logger.info('Admin manually triggered feed generation for all users');
+
+      // Trigger feed generation asynchronously
+      generateAllUserFeeds().catch((error) => {
+        logger.error('Feed generation job failed:', error);
+      });
+
+      return res.json({
+        success: true,
+        message: 'Feed generation job started for all users',
+      });
+    } catch (error: any) {
+      logger.error('Failed to trigger feed generation', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to trigger feed generation',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/admin/check-content-freshness
+   * Manually check content freshness and trigger aggregation if needed
+   */
+  async checkContentFreshness(_req: Request, res: Response) {
+    try {
+      logger.info('Admin manually triggered content freshness check');
+
+      // Trigger freshness check asynchronously
+      checkContentFreshness().catch((error) => {
+        logger.error('Content freshness check failed:', error);
+      });
+
+      return res.json({
+        success: true,
+        message: 'Content freshness check started',
+      });
+    } catch (error: any) {
+      logger.error('Failed to trigger freshness check', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to trigger freshness check',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * POST /api/admin/check-urgent-updates
+   * Check for categories needing urgent content updates
+   */
+  async checkUrgentUpdates(_req: Request, res: Response) {
+    try {
+      logger.info('Admin manually triggered urgent updates check');
+
+      // Trigger urgent check asynchronously
+      checkUrgentUpdates().catch((error) => {
+        logger.error('Urgent updates check failed:', error);
+      });
+
+      return res.json({
+        success: true,
+        message: 'Urgent updates check started',
+      });
+    } catch (error: any) {
+      logger.error('Failed to trigger urgent updates check', { error: error.message });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to trigger urgent updates check',
         error: error.message,
       });
     }
