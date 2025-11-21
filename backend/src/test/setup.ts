@@ -3,6 +3,7 @@
  * Runs before all tests
  */
 
+import { jest, afterAll } from '@jest/globals';
 import { prisma } from '../utils/prisma';
 
 // Set test environment

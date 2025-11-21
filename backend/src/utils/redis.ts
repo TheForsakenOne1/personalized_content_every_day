@@ -13,7 +13,7 @@ const getRedis = async (): Promise<RedisClientType> => {
 
 // Export a proxy that initializes on first use
 export const redis = new Proxy({} as RedisClientType, {
-  get: function (target, prop) {
+  get: function (_target, prop) {
     return async function (...args: any[]) {
       const client = await getRedis();
       const method = (client as any)[prop];

@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 import { collaborativeFilter } from './collaborative-filter';
 import { contentBasedFilter } from './content-filter';
 import { feedGenerator } from './feed-generator';
@@ -122,7 +121,7 @@ export class RecommendationService {
   /**
    * Get user profile with categories and interactions
    */
-  private async getUserProfile(userId: string) {
+  private async getUserProfile(_userId: string) {
     // TODO: Uncomment when Prisma works
     /*
     const user = await prisma.user.findUnique({
@@ -165,7 +164,7 @@ export class RecommendationService {
   /**
    * Get candidate content from user's categories
    */
-  private async getCandidateContent(userId: string, categoryIds: string[], excludeRead: boolean) {
+  private async getCandidateContent(_userId: string, _categoryIds: string[], _excludeRead: boolean) {
     // TODO: Uncomment when Prisma works
     /*
     const where: any = {

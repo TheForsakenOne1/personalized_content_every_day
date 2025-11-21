@@ -1,15 +1,14 @@
 import { Request, Response } from 'express';
-import { prisma } from '../utils/prisma';
 import { aggregatorService } from '../services/aggregation/aggregator.service';
 import logger from '../utils/logger';
-import { API_LIMITS, TIME_CONSTANTS, HTTP_STATUS } from '../constants';
+import { API_LIMITS, HTTP_STATUS } from '../constants';
 
 export class AdminController {
   /**
    * GET /api/admin/stats
    * Get system statistics
    */
-  async getSystemStats(req: Request, res: Response) {
+  async getSystemStats(_req: Request, res: Response) {
     try {
       // Note: Full database implementation pending - using placeholder responses
       // When database is fully configured, uncomment the following:
@@ -73,7 +72,6 @@ export class AdminController {
         Number(req.query.limit) || API_LIMITS.DEFAULT_PAGE_SIZE,
         API_LIMITS.MAX_PAGE_SIZE
       );
-      const skip = (page - 1) * limit;
 
       // Note: Full database implementation pending - using placeholder responses
       // When database is fully configured, uncomment the following:
@@ -243,7 +241,7 @@ export class AdminController {
    * GET /api/admin/health
    * System health check
    */
-  async getSystemHealth(req: Request, res: Response) {
+  async getSystemHealth(_req: Request, res: Response) {
     try {
       // Note: Basic health check - can be enhanced with:
       // - Database connection test

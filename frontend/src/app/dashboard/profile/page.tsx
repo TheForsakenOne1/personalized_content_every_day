@@ -7,6 +7,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { useAuthStore } from "@/store/authStore";
 import { userService } from "@/services/api";
 import type { UserStats } from "@/services/api/user.service";
+import { logger } from "@/lib/logger";
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
@@ -19,7 +20,7 @@ export default function ProfilePage() {
         const data = await userService.getStats();
         setStats(data);
       } catch (error) {
-        console.error('Failed to fetch user stats:', error);
+        logger.error('Failed to fetch user stats', error);
       } finally {
         setLoading(false);
       }

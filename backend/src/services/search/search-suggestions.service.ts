@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 import { redis } from '../../utils/redis';
 
 export interface SearchSuggestion {
@@ -73,7 +72,7 @@ export class SearchSuggestionsService {
   /**
    * Get suggestions from user's search history
    */
-  private async getPersonalSuggestions(userId: string, query: string): Promise<SearchSuggestion[]> {
+  private async getPersonalSuggestions(_userId: string, _query: string): Promise<SearchSuggestion[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -107,7 +106,7 @@ export class SearchSuggestionsService {
   /**
    * Get popular/trending search suggestions
    */
-  private async getPopularSuggestions(query: string): Promise<SearchSuggestion[]> {
+  private async getPopularSuggestions(_query: string): Promise<SearchSuggestion[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -155,7 +154,7 @@ export class SearchSuggestionsService {
   /**
    * Get suggestions from content titles
    */
-  private async getContentSuggestions(query: string): Promise<SearchSuggestion[]> {
+  private async getContentSuggestions(_query: string): Promise<SearchSuggestion[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -213,7 +212,7 @@ export class SearchSuggestionsService {
   /**
    * Get suggestions from tags
    */
-  private async getTagSuggestions(query: string): Promise<SearchSuggestion[]> {
+  private async getTagSuggestions(_query: string): Promise<SearchSuggestion[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*

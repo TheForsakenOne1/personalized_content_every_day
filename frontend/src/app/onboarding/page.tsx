@@ -10,6 +10,7 @@ import { PreviewStep } from "@/components/onboarding/preview-step";
 import { TutorialStep } from "@/components/onboarding/tutorial-step";
 import { toast } from "sonner";
 import { userService, categoryService } from "@/services/api";
+import { logger } from "@/lib/logger";
 
 const TOTAL_STEPS = 4;
 
@@ -73,7 +74,7 @@ export default function OnboardingPage() {
           // Trigger initial content fetching by pre-loading the feed
           // This will cause the backend to generate recommendations based on selected categories
           userService.getFeed().catch((err) => {
-            console.error("Failed to pre-load feed:", err);
+            logger.error("Failed to pre-load feed", err);
           });
         }
       }
@@ -84,7 +85,7 @@ export default function OnboardingPage() {
       });
       router.push("/dashboard");
     } catch (error) {
-      console.error("Failed to save preferences:", error);
+      logger.error("Failed to save preferences", error);
       // Still complete onboarding even if saving fails
       completeOnboarding();
       toast.warning("Welcome to Vidya!", {

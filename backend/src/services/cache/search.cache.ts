@@ -1,4 +1,3 @@
-import logger from '../../utils/logger';
 import { cacheService } from './cache.service';
 
 export class SearchCache {

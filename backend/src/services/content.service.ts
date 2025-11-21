@@ -409,6 +409,7 @@ export class ContentService {
     const ageInHours = lastUpdated
       ? (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60)
       : null;
+    const freshnessPercentage = totalContent > 0 ? Math.round((freshContent / totalContent) * 100) : 0;
 
     return {
       isStale,
@@ -417,7 +418,7 @@ export class ContentService {
       totalContent,
       freshContent,
       staleContent,
-      freshnessPercentage: totalContent > 0 ? Math.round((freshContent / totalContent) * 100) : 0,
+      freshnessPercentage,
       shouldRefresh: isStale || freshnessPercentage < 50,
       category: mostRecentContent?.category || null,
     };

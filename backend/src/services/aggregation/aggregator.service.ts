@@ -106,7 +106,7 @@ export class AggregatorService {
    * Aggregate and save content for a category
    * This is the main method called by the scheduler
    */
-  async aggregateForCategory(categoryId: string, categoryName: string): Promise<AggregationResult> {
+  async aggregateForCategory(_categoryId: string, categoryName: string): Promise<AggregationResult> {
     logger.info(`\n🔄 Aggregating content for category: ${categoryName}`);
 
     const result: AggregationResult = {

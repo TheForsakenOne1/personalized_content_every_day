@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { CategoryController } from '../controllers/category.controller';
-import { authenticate, optionalAuth } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { validateBody, validateParams } from '../middleware/validate';
 import { schemas } from '../validation/schemas';
 

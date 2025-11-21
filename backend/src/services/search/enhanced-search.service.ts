@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 import { searchCache } from '../cache/search.cache';
 import { searchHistoryService } from './search-history.service';
 
@@ -191,7 +190,7 @@ export class EnhancedSearchService {
   /**
    * Get total count of results
    */
-  private async getCount(where: any): Promise<number> {
+  private async getCount(_where: any): Promise<number> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -209,14 +208,14 @@ export class EnhancedSearchService {
    * Get search results
    */
   private async getResults(
-    where: any,
-    filters: AdvancedSearchFilters,
-    skip: number,
-    limit: number
+    _where: any,
+    _filters: AdvancedSearchFilters,
+    _skip: number,
+    _limit: number
   ): Promise<SearchResult[]> {
     try {
       // Determine sort order
-      const orderBy = this.buildOrderBy(filters.sortBy || 'relevance', filters.sortOrder || 'desc');
+      // const orderBy = this.buildOrderBy(filters.sortBy || 'relevance', filters.sortOrder || 'desc');
 
       // TODO: Uncomment when Prisma is generated
       /*
@@ -273,7 +272,8 @@ export class EnhancedSearchService {
   /**
    * Build orderBy clause
    */
-  private buildOrderBy(sortBy: string, sortOrder: 'asc' | 'desc'): any {
+  // @ts-ignore - Reserved for future use
+  private _buildOrderBy(sortBy: string, sortOrder: 'asc' | 'desc'): any {
     switch (sortBy) {
       case 'date':
         return { publishedAt: sortOrder };

@@ -8,6 +8,7 @@ import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
 import { userService } from "@/services/api";
 import { toast } from "sonner";
 import { Bookmark, Loader2, Filter } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function BookmarksPage() {
   const [content, setContent] = useState<ContentItem[]>([]);
@@ -41,7 +42,7 @@ export default function BookmarksPage() {
 
         setContent(transformedContent);
       } catch (error: any) {
-        console.error("Failed to fetch bookmarks:", error);
+        logger.error("Failed to fetch bookmarks", error);
         toast.error("Failed to load saved content", {
           description: error.message || "Please try again later",
         });

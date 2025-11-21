@@ -1,6 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger';
-import { HTTP_STATUS } from '../constants';
+import { Response, NextFunction } from 'express';
 import { UserService } from '../services/user.service';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';

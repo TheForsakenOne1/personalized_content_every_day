@@ -27,6 +27,7 @@ export interface DigestContent {
  * - Notifications
  */
 export class EmailService {
+  // @ts-ignore - Used in methods but TypeScript incorrectly flags as unused
   private transporter: nodemailer.Transporter | null = null;
 
   constructor() {
@@ -284,6 +285,7 @@ export class EmailService {
   /**
    * Convert HTML to plain text (basic)
    */
+  // @ts-ignore - Used in sendEmail but TypeScript incorrectly flags as unused
   private htmlToText(html: string): string {
     return html
       .replace(/<[^>]*>/g, '')

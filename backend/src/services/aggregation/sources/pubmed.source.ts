@@ -1,4 +1,3 @@
-import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
 
@@ -7,19 +6,6 @@ interface PubMedSearchResult {
     idlist: string[];
     count: string;
   };
-}
-
-interface PubMedArticle {
-  uid: string;
-  title: string;
-  authors: { name: string }[];
-  source: string;
-  pubdate: string;
-  sortpubdate: string;
-  epubdate: string;
-  fulljournalname: string;
-  elocationid: string;
-  articleids: { idtype: string; value: string }[];
 }
 
 export class PubMedSource extends BaseSource {
@@ -204,7 +190,7 @@ export class PubMedSource extends BaseSource {
     }
   }
 
-  private extractMeshTerms(article: any): string[] {
+  private extractMeshTerms(_article: any): string[] {
     // Extract MeSH (Medical Subject Headings) terms if available
     // This would require additional API calls to PubMed
     // For now, return empty array

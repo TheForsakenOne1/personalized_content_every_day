@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 
 export interface SearchHistoryEntry {
   id: string;
@@ -40,7 +39,7 @@ export class SearchHistoryService {
   /**
    * Get user's search history
    */
-  async getUserSearchHistory(userId: string, limit: number = 20): Promise<SearchHistoryEntry[]> {
+  async getUserSearchHistory(_userId: string, _limit: number = 20): Promise<SearchHistoryEntry[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -70,7 +69,7 @@ export class SearchHistoryService {
   /**
    * Get unique recent searches (deduplicated)
    */
-  async getRecentUniqueSearches(userId: string, limit: number = 10): Promise<string[]> {
+  async getRecentUniqueSearches(_userId: string, _limit: number = 10): Promise<string[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -137,7 +136,7 @@ export class SearchHistoryService {
   /**
    * Get search history analytics for user
    */
-  async getUserSearchAnalytics(userId: string): Promise<{
+  async getUserSearchAnalytics(_userId: string): Promise<{
     totalSearches: number;
     uniqueQueries: number;
     topSearches: Array<{ query: string; count: number }>;

@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 
 export interface ReadingStats {
   totalReadingTimeMinutes: number;
@@ -51,7 +50,7 @@ export class AnalyticsService {
   /**
    * Get user's reading statistics
    */
-  async getReadingStats(userId: string): Promise<ReadingStats> {
+  async getReadingStats(_userId: string): Promise<ReadingStats> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -118,7 +117,7 @@ export class AnalyticsService {
    * Calculate user's reading streak
    * Streak = consecutive days with at least one read
    */
-  async getReadingStreak(userId: string): Promise<ReadingStreak> {
+  async getReadingStreak(_userId: string): Promise<ReadingStreak> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -223,7 +222,7 @@ export class AnalyticsService {
   /**
    * Get topic breakdown (time spent per category)
    */
-  async getTopicBreakdown(userId: string): Promise<TopicBreakdown[]> {
+  async getTopicBreakdown(_userId: string): Promise<TopicBreakdown[]> {
     try {
       // TODO: Uncomment when Prisma is generated
       /*
@@ -296,7 +295,7 @@ export class AnalyticsService {
    * Get daily activity timeline (last N days)
    */
   async getActivityTimeline(
-    userId: string,
+    _userId: string,
     days: number = 30
   ): Promise<DailyActivity> {
     try {
@@ -464,7 +463,7 @@ export class AnalyticsService {
    * Get recommendation performance metrics
    * Measures how well recommendations are working
    */
-  async getRecommendationMetrics(userId: string) {
+  async getRecommendationMetrics(_userId: string) {
     try {
       // TODO: Uncomment when Prisma is generated
       /*

@@ -45,13 +45,13 @@ export class SearchController {
       // Perform search
       const results = await enhancedSearchService.search(filters, userId, page, limit);
 
-      res.json({
+      return res.json({
         success: true,
         data: results,
       });
     } catch (error: any) {
       logger.error('Search failed', { error: error.message, query: req.body.query });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Search failed',
         error: error.message,
@@ -74,13 +74,13 @@ export class SearchController {
 
       const suggestions = await searchSuggestionsService.getSuggestions(query, userId, limit);
 
-      res.json({
+      return res.json({
         success: true,
         data: suggestions,
       });
     } catch (error: any) {
       logger.error('Failed to get search suggestions', { error: error.message, query: req.query.q });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get suggestions',
         error: error.message,
@@ -101,13 +101,13 @@ export class SearchController {
 
       const trending = await searchSuggestionsService.getTrendingSearches(limit);
 
-      res.json({
+      return res.json({
         success: true,
         data: trending,
       });
     } catch (error: any) {
       logger.error('Failed to get trending searches', { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get trending searches',
         error: error.message,
@@ -137,13 +137,13 @@ export class SearchController {
 
       const history = await searchHistoryService.getUserSearchHistory(userId, limit);
 
-      res.json({
+      return res.json({
         success: true,
         data: history,
       });
     } catch (error: any) {
       logger.error('Failed to get search history', { userId: (req as any).user?.id, error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search history',
         error: error.message,
@@ -173,13 +173,13 @@ export class SearchController {
 
       const searches = await searchHistoryService.getRecentUniqueSearches(userId, limit);
 
-      res.json({
+      return res.json({
         success: true,
         data: searches,
       });
     } catch (error: any) {
       logger.error('Failed to get recent searches', { userId: (req as any).user?.id, error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get recent searches',
         error: error.message,
@@ -204,13 +204,13 @@ export class SearchController {
 
       await searchHistoryService.clearUserHistory(userId);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Search history cleared',
       });
     } catch (error: any) {
       logger.error('Failed to clear search history', { userId: (req as any).user?.id, error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to clear search history',
         error: error.message,
@@ -236,7 +236,7 @@ export class SearchController {
 
       await searchHistoryService.deleteSearch(userId, searchId);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Search deleted',
       });
@@ -246,7 +246,7 @@ export class SearchController {
         searchId: req.params.searchId,
         error: error.message
       });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to delete search',
         error: error.message,
@@ -271,13 +271,13 @@ export class SearchController {
 
       const analytics = await searchHistoryService.getUserSearchAnalytics(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: analytics,
       });
     } catch (error: any) {
       logger.error('Failed to get search analytics', { userId: (req as any).user?.id, error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search analytics',
         error: error.message,
@@ -295,13 +295,13 @@ export class SearchController {
 
       const facets = await enhancedSearchService.getSearchFacets(query);
 
-      res.json({
+      return res.json({
         success: true,
         data: facets,
       });
     } catch (error: any) {
       logger.error('Failed to get search facets', { query: req.query.q, error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to get search facets',
         error: error.message,

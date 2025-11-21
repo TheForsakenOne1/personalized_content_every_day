@@ -29,6 +29,7 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface Topic {
   id: string;
@@ -207,7 +208,7 @@ export default function PreferencesPage() {
           );
         }
       } catch (error) {
-        console.error('Failed to fetch preferences:', error);
+        logger.error('Failed to fetch preferences', error);
       } finally {
         setLoading(false);
       }
@@ -259,7 +260,7 @@ export default function PreferencesPage() {
 
       toast.success("Your preferences have been saved!");
     } catch (error) {
-      console.error('Failed to save preferences:', error);
+      logger.error('Failed to save preferences', error);
       toast.error("Failed to save preferences");
     } finally {
       setIsSaving(false);

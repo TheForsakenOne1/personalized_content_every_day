@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@sentry/node": "^10.26.0",
+    "@sentry/profiling-node": "^10.26.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
@@ -52,6 +54,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
     "@types/jest": "^29.5.12",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.11.0",

@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import { logger } from '@/lib/logger';
 
 export interface ContentFreshness {
   isStale: boolean;
@@ -55,14 +56,14 @@ export const contentRefreshService = {
       if (freshness.shouldRefresh) {
         // Trigger refresh in background
         this.refreshContent({ categoryId, categoryName }).catch(err => {
-          console.error('Failed to trigger content refresh:', err);
+          logger.error('Failed to trigger content refresh', err);
         });
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Failed to check content freshness:', error);
+      logger.error('Failed to check content freshness', error);
       return false;
     }
   },

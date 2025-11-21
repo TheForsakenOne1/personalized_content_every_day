@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
+import swaggerUi from 'swagger-ui-express';
 
 import { config } from './config';
 import { errorHandler } from './middleware/errorHandler';
@@ -13,6 +14,8 @@ import { rateLimiter } from './middleware/rateLimiter';
 import logger from './utils/logger';
 import { initializeContentAggregation } from './jobs/content-aggregation.job';
 import { validateEnv } from './config/validate-env';
+import { initializeSentry } from './config/sentry';
+import { swaggerSpec } from './config/swagger';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -28,6 +31,9 @@ dotenv.config();
 
 // Validate environment variables on startup
 validateEnv();
+
+// Initialize Sentry for error tracking
+initializeSentry();
 
 const app: Application = express();
 const httpServer = createServer(app);
@@ -97,8 +103,21 @@ app.use(cookieParser());
 app.use('/api', rateLimiter);
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'EduHub API Documentation',
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // API Routes

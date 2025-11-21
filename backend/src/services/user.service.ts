@@ -1,7 +1,6 @@
 import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/errorHandler';
-import { hashPassword } from '../utils/password';
 import { feedCache } from './cache/feed.cache';
 
 export class UserService {

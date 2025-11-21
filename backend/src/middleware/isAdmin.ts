@@ -50,7 +50,7 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
       });
     }
 
-    next();
+    return next();
   } catch (error) {
     logger.error('Admin middleware error', { error: (error as Error).message, userId });
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

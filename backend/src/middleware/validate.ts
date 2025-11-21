@@ -5,7 +5,6 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { AnyZodObject, ZodError } from 'zod';
-import { AppError } from './errorHandler';
 import { HTTP_STATUS } from '../constants';
 import logger from '../utils/logger';
 
@@ -62,7 +61,7 @@ export const validate = (
           break;
       }
 
-      next();
+      return next();
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.errors.map((err) => ({

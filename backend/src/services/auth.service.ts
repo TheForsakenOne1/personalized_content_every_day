@@ -1,4 +1,3 @@
-import logger from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { hashPassword, comparePassword, validatePasswordStrength } from '../utils/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';

@@ -11,6 +11,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { userService, contentService, contentRefreshService } from "@/services/api";
 import { toast } from "sonner";
 import { Loader2, RefreshCw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function DashboardPage() {
 
         if (refreshTriggered) {
           setIsRefreshing(true);
-          console.log('Content is stale, refresh triggered in background');
+          logger.info('Content is stale, refresh triggered in background');
         }
 
         const feedContent = await userService.getFeed(filter);
@@ -83,7 +84,7 @@ export default function DashboardPage() {
           });
         }
       } catch (error: any) {
-        console.error("Failed to fetch content:", error);
+        logger.error("Failed to fetch content", error);
         toast.error("Failed to load content", {
           description: error.message || "Please try again later",
         });

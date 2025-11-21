@@ -1,5 +1,4 @@
 import logger from '../../utils/logger';
-import { prisma } from '../../utils/prisma';
 
 /**
  * Collaborative Filtering
@@ -50,7 +49,7 @@ export class CollaborativeFilter {
   /**
    * Find users with similar interaction patterns
    */
-  private async findSimilarUsers(userId: string, userInteractions: any[]): Promise<string[]> {
+  private async findSimilarUsers(_userId: string, userInteractions: any[]): Promise<string[]> {
     if (userInteractions.length === 0) {
       return [];
     }
@@ -108,7 +107,7 @@ export class CollaborativeFilter {
   /**
    * Get interactions from similar users for specific content
    */
-  private async getSimilarUserInteractions(similarUserIds: string[], contentId: string): Promise<Array<{ status: string; isSaved: boolean; rating: number | null }>> {
+  private async getSimilarUserInteractions(similarUserIds: string[], _contentId: string): Promise<Array<{ status: string; isSaved: boolean; rating: number | null }>> {
     if (similarUserIds.length === 0) {
       return [];
     }

@@ -8,6 +8,7 @@ import { ContentItem } from "@/components/dashboard/content-card";
 import { Flame, Clock, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { contentService, contentRefreshService, type Content } from "@/services/api";
+import { logger } from "@/lib/logger";
 
 // Helper function to convert Content to ContentItem
 const convertToContentItem = (content: Content): ContentItem => {
@@ -43,14 +44,14 @@ export default function TrendingPage() {
 
         if (refreshTriggered) {
           setIsRefreshing(true);
-          console.log('Content is stale, refresh triggered in background');
+          logger.info('Content is stale, refresh triggered in background');
         }
 
         const data = await contentService.getTrendingContent(7, 20); // Last 7 days, max 20 items
         const converted = data.map(convertToContentItem);
         setTrending(converted);
       } catch (error) {
-        console.error('Failed to fetch trending content:', error);
+        logger.error('Failed to fetch trending content', error);
         // Don't fallback to mock data - show empty state instead
         setTrending([]);
       } finally {

@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ContentCard, ContentItem } from "@/components/dashboard/content-card";
 import { searchService, type SearchSuggestion } from "@/services/api";
+import { logger } from "@/lib/logger";
 
 const mockSearchResults: ContentItem[] = [
   {
@@ -125,7 +126,7 @@ export default function SearchPage() {
         setSuggestions(results);
         setShowSuggestions(true);
       } catch (error) {
-        console.error('Failed to fetch suggestions:', error);
+        logger.error('Failed to fetch suggestions', error);
         setSuggestions([]);
       } finally {
         setLoadingSuggestions(false);

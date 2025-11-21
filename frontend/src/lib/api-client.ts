@@ -10,6 +10,7 @@
  */
 
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -94,7 +95,7 @@ export class ApiClient {
         this.clearAuth();
         return false;
       } catch (error) {
-        console.error('Token refresh failed:', error);
+        logger.error('Token refresh failed', error);
         this.clearAuth();
         return false;
       } finally {
@@ -346,7 +347,7 @@ export class ApiClient {
       toast.error(message);
     }
 
-    console.error('API Error:', error);
+    logger.error('API Error', error);
   }
 }
 

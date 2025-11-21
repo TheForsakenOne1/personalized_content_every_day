@@ -47,6 +47,10 @@ const envSchema = z.object({
   SPRINGER_API_KEY: z.string().optional(),
   SERP_API_KEY: z.string().optional(),
 
+  // Error Tracking (Optional)
+  SENTRY_DSN: z.string().url().optional(),
+  APP_VERSION: z.string().optional(),
+
   // n8n Integration (Optional)
   N8N_WEBHOOK_SECRET: z.string().optional(),
   N8N_API_URL: z.string().url().optional(),

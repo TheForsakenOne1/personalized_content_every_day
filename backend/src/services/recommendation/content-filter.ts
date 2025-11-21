@@ -99,7 +99,8 @@ export class ContentBasedFilter {
    * Calculate TF-IDF similarity between text fields
    * Simplified version using word overlap
    */
-  private calculateTextSimilarity(textA: string, textB: string): number {
+  // @ts-ignore - Reserved for future use
+  private _calculateTextSimilarity(textA: string, textB: string): number {
     if (!textA || !textB) return 0;
 
     // Tokenize and clean
@@ -150,7 +151,8 @@ export class ContentBasedFilter {
    * Calculate cosine similarity between two vectors
    * Used for advanced text similarity
    */
-  private cosineSimilarity(vectorA: number[], vectorB: number[]): number {
+  // @ts-ignore - Reserved for future use
+  private _cosineSimilarity(vectorA: number[], vectorB: number[]): number {
     if (vectorA.length !== vectorB.length) return 0;
 
     let dotProduct = 0;

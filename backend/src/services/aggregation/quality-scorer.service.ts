@@ -1,4 +1,3 @@
-import logger from '../../utils/logger';
 import { NormalizedContent } from './base.source';
 
 export interface QualityScore {

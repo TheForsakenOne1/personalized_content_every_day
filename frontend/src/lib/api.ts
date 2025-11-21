@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 class ApiClient {
@@ -66,7 +68,7 @@ class ApiClient {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      logger.error('API request failed', error);
       throw error;
     }
   }

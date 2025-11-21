@@ -1,18 +1,5 @@
-import logger from '../../../utils/logger';
 import axios from 'axios';
 import { BaseSource, RawContent, NormalizedContent, FetchOptions } from '../base.source';
-
-interface ArxivEntry {
-  id: string;
-  title: string;
-  summary: string;
-  author: { name: string }[];
-  published: string;
-  updated: string;
-  link: { href: string; rel: string }[];
-  category: { term: string; scheme: string }[];
-  'arxiv:primary_category'?: { term: string };
-}
 
 export class ArxivSource extends BaseSource {
   readonly name = 'arXiv';
@@ -31,7 +18,7 @@ export class ArxivSource extends BaseSource {
   };
 
   async fetchContent(options: FetchOptions): Promise<RawContent[]> {
-    const { category, limit = 50, since, keywords } = options;
+    const { category, limit = 50, keywords } = options;
 
     // Build search query
     let searchQuery = '';

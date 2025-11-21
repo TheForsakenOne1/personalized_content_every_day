@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import logger from '../utils/logger';
-import { API_LIMITS, TIME_CONSTANTS, HTTP_STATUS } from '../constants';
+import { API_LIMITS, HTTP_STATUS } from '../constants';
 import { analyticsService } from '../services/analytics/analytics.service';
 
 export class AnalyticsController {
@@ -21,13 +21,13 @@ export class AnalyticsController {
 
       const stats = await analyticsService.getReadingStats(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: stats,
       });
     } catch (error: any) {
       logger.error('Reading stats error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch reading stats',
         error: error.message,
@@ -52,13 +52,13 @@ export class AnalyticsController {
 
       const streak = await analyticsService.getReadingStreak(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: streak,
       });
     } catch (error: any) {
       logger.error('Reading streak error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch reading streak',
         error: error.message,
@@ -83,13 +83,13 @@ export class AnalyticsController {
 
       const breakdown = await analyticsService.getTopicBreakdown(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: breakdown,
       });
     } catch (error: any) {
       logger.error('Topic breakdown error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch topic breakdown',
         error: error.message,
@@ -116,13 +116,13 @@ export class AnalyticsController {
 
       const activity = await analyticsService.getActivityTimeline(userId, days);
 
-      res.json({
+      return res.json({
         success: true,
         data: activity,
       });
     } catch (error: any) {
       logger.error('Activity timeline error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch activity timeline',
         error: error.message,
@@ -147,13 +147,13 @@ export class AnalyticsController {
 
       const analytics = await analyticsService.getDashboardAnalytics(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: analytics,
       });
     } catch (error: any) {
       logger.error('Dashboard analytics error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch dashboard analytics',
         error: error.message,
@@ -178,13 +178,13 @@ export class AnalyticsController {
 
       const metrics = await analyticsService.getRecommendationMetrics(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: metrics,
       });
     } catch (error: any) {
       logger.error('Recommendation metrics error:',  { error: error.message });
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Failed to fetch recommendation metrics',
         error: error.message,
